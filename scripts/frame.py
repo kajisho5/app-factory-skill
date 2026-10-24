@@ -13,7 +13,7 @@ Usage:
   frame.py mac    SCREEN.svg -o OUT.svg
   frame.py watch  SCREEN.svg -o OUT.svg
   frame.py duo-outer SCREEN.svg -o OUT.svg       # iPhone Duo closed (outer display)
-  frame.py duo-inner SCREEN.svg -o OUT.svg       # iPhone Duo open (inner display, crease shown)
+  frame.py duo-inner SCREEN.svg -o OUT.svg       # iPhone Duo open (inner display; fold line only for *-folded*)
   frame.py pair   LEFT.svg RIGHT.svg -o OUT.svg [--bg "#F2F2F7"] [--caption-left TEXT --caption-right TEXT]
                                                  # two framed iPhones side by side (marketing image)
 """
@@ -102,9 +102,9 @@ def device(kind, path, ox, oy, scale, uid):
         pw, ph = 125 * scale, 37 * scale
         parts.append(f'<rect x="{ox + bw / 2 - pw / 2:g}" y="{oy + b + 11 * scale:g}" width="{pw:g}" '
                      f'height="{ph:g}" rx="{ph / 2:g}" fill="#000"/>')
-    if kind == "duo-inner":
-        # Fold line (presentation only; the real crease is barely visible): horizontal across
-        # the middle in portrait, vertical in landscape.
+    if kind == "duo-inner" and "-folded" in Path(path).name:
+        # Fold line, only for screens drawn partially folded (file name contains "-folded"):
+        # the fold region exists only then. Horizontal in portrait, vertical in landscape.
         if sh > sw:
             parts.append(f'<rect x="{ox + b:g}" y="{oy + bh / 2 - 0.5 * scale:g}" width="{sw:g}" '
                          f'height="{1 * scale:g}" fill="#808080" fill-opacity="0.35"/>')

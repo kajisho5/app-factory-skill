@@ -61,7 +61,7 @@ design/
     iphone-duo-inner-landscape-S-01-folded-light.png … 半分折った状態
     ipad-landscape-S-01-light.png
     mac-S-01-light.png
-    watch-ultra-S-01.png
+    watch-ultra-S-07.png
 ```
 
 スクリプトは単体でも使えます。

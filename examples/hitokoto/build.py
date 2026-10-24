@@ -57,6 +57,20 @@ def search_btn(cx, cy, t, fill=None):
             f'<circle cx="{cx-2}" cy="{cy-2}" r="7"/><path d="M{cx+3} {cy+3}l5 5"/></g>')
 
 
+def text_btn(x, y, label, t, fill=None, size=17):
+    """Plain text button in a glass capsule (not filled): x = left edge, y = top, height 44."""
+    tw = len(label) * size + 32
+    f = fill or t["glass"]
+    return (f'<rect x="{x}" y="{y}" width="{tw}" height="44" rx="22" fill="{f}" stroke="{t["glass_stroke"]}"/>'
+            + T(x + tw / 2, y + 28, label, size, t["label"], 400, "middle", bg=f)), tw
+
+
+def more_btn(cx, cy, t, fill=None):
+    f = fill or t["glass"]
+    dots = "".join(f'<circle cx="{cx + d}" cy="{cy}" r="2.2" fill="{t["label"]}"/>' for d in (-7, 0, 7))
+    return f'<circle cx="{cx}" cy="{cy}" r="22" fill="{f}" stroke="{t["glass_stroke"]}"/>' + dots
+
+
 def svg(w, h, bg, body):
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
             f'data-bg="{bg}"><rect width="100%" height="100%" fill="{bg}"/>{body}</svg>\n')
@@ -104,11 +118,13 @@ def symbol_filled(kind, cx, cy, c, cut="#FFFFFF"):
     return ""
 
 
-def tab_bar(w, h, t, active=0):
+def tab_bar(w, h, t, active=0, maxw=None):
     # Floating Liquid Glass tab bar: navigation only, symbol + one-word label per tab.
     bh = 62
-    bw = w - 2 * 21 - bh - 10  # search is its own tab at the trailing end (separate round button)
-    x, y = 21, h - 34 - bh
+    total = min(w - 2 * 21, maxw or w)
+    x0 = (w - total) / 2
+    bw = total - bh - 10  # search is its own tab at the trailing end (separate round button)
+    x, y = x0, h - 34 - bh
     parts = [f'<rect x="{x}" y="{y}" width="{bw}" height="{bh}" rx="31" fill="{t["glass"]}" '
              f'fill-opacity="{t["glass_op"]}" stroke="{t["glass_stroke"]}"/>']
     tabs = [("book", "日記"), ("cal", "カレンダー"), ("gear", "設定")]
@@ -120,7 +136,7 @@ def tab_bar(w, h, t, active=0):
             parts.append(f'<rect x="{cx-46}" y="{y+5}" width="92" height="{bh-10}" rx="26" fill="{tabbg}"/>')
         parts.append(symbol_filled(sym, cx, y + 22, col, tabbg))
         parts.append(T(cx, y + 50, lab, 11, col, 600, "middle", bg=tabbg))
-    parts.append(search_btn(w - 21 - bh / 2, y + bh / 2, t).replace('r="22"', f'r="{bh/2}"', 1))
+    parts.append(search_btn(x0 + total - bh / 2, y + bh / 2, t).replace('r="22"', f'r="{bh/2}"', 1))
     return "".join(parts)
 
 
@@ -155,13 +171,14 @@ def iphone_detail(theme):
     b.append(f'<circle cx="38" cy="84" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
              f'stroke="{t["glass_stroke"]}"/><path d="M42 74l-10 10 10 10" fill="none" stroke="{t["label"]}" '
              f'stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>')
-    b.append(f'<rect x="{w-106}" y="62" width="84" height="44" rx="22" fill="{t["accent"]}"/>')
-    b.append(T(w - 64, 90, "編集", 17, "#FFFFFF", 600, "middle", bg=t["accent"]))
+    eb, ew = text_btn(w - 22 - 44 - 8 - 66, 62, "編集", t)
+    b.append(eb)
+    b.append(more_btn(w - 44, 84, t))
     b.append(T(20, 150, d, 28, t["label"], 700))
     b.append(f'<rect x="16" y="176" width="{w-32}" height="170" rx="26" fill="{t["cell"]}"/>')
     b.append(T(36, 220, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=t["cell"]))
     b.append(T(36, 248, "帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
-    b.append(T(36, 318, "晴れ・午後 5:12 に記録", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(T(36, 318, "晴れ・午後 5:12", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     b.append(tab_bar(w, h, t))
     b.append(f'<rect x="{w/2-70}" y="{h-13}" width="140" height="5" rx="2.5" fill="{t["label"]}"/>')
     return svg(w, h, t["bg"], "".join(b))
@@ -175,7 +192,8 @@ def ipad(theme):
     # Floating sidebar (Liquid Glass) with two levels at most.
     b.append(f'<rect x="12" y="52" width="{sw}" height="{h-64}" rx="26" fill="{t["cell"]}" '
              f'stroke="{t["glass_stroke"]}"/>')
-    b.append(T(36, 104, "ひとこと日記", 28, t["label"], 700, bg=t["cell"]))
+    b.append(f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><rect x="30" y="72" width="22" height="20" rx="3"/>'
+             f'<path d="M38 72v20"/></g>')
     items = [("book", "すべての日記", True), ("cal", "カレンダー", False), ("gear", "設定", False)]
     for i, (sym, lab, on) in enumerate(items):
         y = 132 + i * 52
@@ -185,33 +203,35 @@ def ipad(theme):
             b.append(f'<rect x="24" y="{y}" width="{sw-24}" height="44" rx="12" fill="{rowbg}"/>')
         b.append(symbol(sym, 52, y + 22, col))
         b.append(T(76, y + 28, lab, 17, t["label"], 600 if on else 400, bg=rowbg))
-    b.append(T(36, h - 40, "残り 23 件（無料版は 30 件まで）", 13, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     # List column + detail.
     lx = sw + 36
     lw = 400
     b.append(T(lx, 104, "すべての日記", 34, t["label"], 700))
-    b.append(f'<rect x="{lx}" y="128" width="{lw}" height="{len(ENTRIES)*76}" rx="26" fill="{t["cell"]}"/>')
+    b.append(T(lx, 132, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(f'<rect x="{lx}" y="148" width="{lw}" height="{len(ENTRIES)*76}" rx="26" fill="{t["cell"]}"/>')
     for i, (d, s) in enumerate(ENTRIES):
-        cy = 128 + i * 76
+        cy = 148 + i * 76
         rowbg = mix(t["accent"], t["cell"], 0.14) if i == 0 else t["cell"]
         if i == 0:
             b.append(f'<rect x="{lx+8}" y="{cy+6}" width="{lw-16}" height="64" rx="18" fill="{rowbg}"/>')
         b.append(T(lx + 20, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=rowbg))
         b.append(T(lx + 20, cy + 56, s[:17] + ("…" if len(s) > 17 else ""), 17, t["label"], 400, bg=rowbg))
     dx = lx + lw + 32
-    b.append(f'<circle cx="{w-50}" cy="76" r="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
-             + symbol_pencil(w - 62, 64, t["accent"]))
-    # Toolbar search field (⌘F) left of the new-entry button.
-    sx = w - 330
+    # Toolbar: 編集, 今日を書く, then the search field at the trailing end (⌘F).
+    sx = w - 28 - 250
+    b.append(f'<circle cx="{sx-34}" cy="76" r="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
+             + symbol_pencil(sx - 46, 64, t["accent"]))
+    eb, ew = text_btn(sx - 34 - 22 - 8 - 66, 54, "編集", t, fill=t["cell"])
+    b.append(eb)
     b.append(f'<rect x="{sx}" y="54" width="250" height="44" rx="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
              f'<g fill="none" stroke="{t["sec"]}" stroke-width="2"><circle cx="{sx+24}" cy="74" r="7"/>'
              f'<path d="M{sx+29} 79l5 5"/></g>')
-    b.append(T(sx + 44, 82, "検索", 17, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(T(sx + 44, 82, "日記を検索", 17, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     d, s = ENTRIES[0]
     b.append(T(dx, 104, d, 28, t["label"], 700))
     b.append(f'<rect x="{dx}" y="128" width="{w-dx-28}" height="180" rx="26" fill="{t["cell"]}"/>')
     b.append(T(dx + 24, 176, "公園の銀杏が色づいてきた。帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
-    b.append(T(dx + 24, 280, "晴れ・午後 5:12 に記録", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(T(dx + 24, 280, "晴れ・午後 5:12", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     return svg(w, h, t["bg"], "".join(b))
 
 
@@ -239,18 +259,21 @@ def mac(theme):
         rowbg = mix(t["accent"], t["side"], 0.16) if on else t["side"]
         if on:
             b.append(f'<rect x="{wx+16}" y="{y}" width="{sw-16}" height="28" rx="6" fill="{rowbg}"/>')
-        b.append(T(wx + 32, y + 19, lab, 13, t["label"], 600 if on else 400, bg=rowbg))
+        b.append(symbol(sym, wx + 34, y + 14, t["accent"] if on else t["label"]).replace('stroke-width="2"', 'stroke-width="1.6"'))
+        b.append(T(wx + 52, y + 19, lab, 13, t["label"], 600 if on else 400, bg=rowbg))
     lx = wx + sw + 24
     b.append(T(lx, wy + 26, "すべての日記", 13, t["label"], 700, bg=t["win"]))
     b.append(T(lx, wy + 43, "残り 23 件（無料版は 30 件まで）", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
-    b.append(f'<rect x="{wx+ww-44}" y="{wy+14}" width="28" height="28" rx="6" fill="{t["bar"]}"/>'
-             + symbol_pencil(wx + ww - 42, wy + 16, t["accent"], 1.0))
-    # Toolbar search field (⌘F), left of the new-entry button.
-    sx = wx + ww - 236
+    # Toolbar: 編集, 今日を書く, then the search field at the trailing end (⌘F).
+    sx = wx + ww - 196
+    b.append(f'<rect x="{sx-40}" y="{wy+14}" width="28" height="28" rx="6" fill="{t["bar"]}"/>'
+             + symbol_pencil(sx - 38, wy + 16, t["accent"], 1.0))
+    b.append(f'<rect x="{sx-96}" y="{wy+14}" width="48" height="28" rx="6" fill="{t["bar"]}"/>'
+             + T(sx - 72, wy + 33, "編集", 13, t["label"], 400, "middle", bg=t["bar"]))
     b.append(f'<rect x="{sx}" y="{wy+14}" width="180" height="28" rx="8" fill="{t["bar"]}"/>'
              f'<g fill="none" stroke="{t["sec"]}" stroke-width="1.6"><circle cx="{sx+16}" cy="{wy+27}" r="5"/>'
              f'<path d="M{sx+20} {wy+31}l4 4"/></g>')
-    b.append(T(sx + 30, wy + 32, "検索", 13, t["sec"], 400, op=t["sec_op"], bg=t["bar"]))
+    b.append(T(sx + 30, wy + 32, "日記を検索", 13, t["sec"], 400, op=t["sec_op"], bg=t["bar"]))
     b.append(f'<rect x="{lx-8}" y="{wy+52}" width="{ww-sw-32}" height="0.5" fill="{t["sep"]}"/>')
     lw = 320
     for i, (d, s) in enumerate(ENTRIES):
@@ -265,7 +288,7 @@ def mac(theme):
     d, s = ENTRIES[0]
     b.append(T(dx, wy + 96, d, 22, t["label"], 700, bg=t["win"]))
     b.append(T(dx, wy + 136, s, 13, t["label"], 400, bg=t["win"]))
-    b.append(T(dx, wy + 166, "晴れ・午後 5:12 に記録", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
+    b.append(T(dx, wy + 166, "晴れ・午後 5:12", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
     return svg(w, h, t["desk"], "".join(b))
 
 
@@ -278,7 +301,7 @@ def watch():
          T(w - 18, 52, "今日のひとこと", 17, "#0091FF", 600, "end", **W),
          f'<rect x="10" y="66" width="{w-20}" height="108" rx="20" fill="#1C1C1E"/>',
          T(22, 104, "公園の銀杏が", 17, "#FFFFFF", 400, bg="#1C1C1E", **W),
-         T(22, 128, "色づいてきた。", 17, "#FFFFFF", 400, bg="#1C1C1E", **W),
+         T(22, 128, "色づいてきた。帰…", 17, "#FFFFFF", 400, bg="#1C1C1E", **W),
          T(22, 158, "午後 5:12", 14, "#EBEBF5", 400, op=0.6, bg="#1C1C1E", **W),
          f'<rect x="10" y="186" width="{w-20}" height="50" rx="25" fill="#0091FF"/>',
          T(w / 2, 217, "音声で書く", 17, "#FFFFFF", 600, "middle", bg="#0091FF", **W)]
@@ -293,7 +316,7 @@ def watch_aod():
     b = [T(w - 18, 28, "9:41", 15, "#AEAEB2", 600, "end", **W),
          T(w - 18, 52, "今日のひとこと", 17, "#5E9EDB", 600, "end", **W),
          f'<rect x="10" y="66" width="{w-20}" height="108" rx="20" fill="#0D0D0F"/>',
-         T(22, 116, "記録済み", 20, "#AEAEB2", 600, bg="#0D0D0F", **W),
+         T(22, 116, "書いた", 20, "#AEAEB2", 600, bg="#0D0D0F", **W),
          T(22, 158, "午後 5:12", 14, "#8E8E93", 400, bg="#0D0D0F", **W),
          f'<rect x="10" y="186" width="{w-20}" height="50" rx="25" fill="none" stroke="#3A3A3C" stroke-width="1.5"/>',
          T(w / 2, 217, "音声で書く", 17, "#8E8E93", 600, "middle", bg="#000000", **W)]
@@ -307,6 +330,7 @@ def iphone_empty(theme):
     b.append(f'<circle cx="{w-38}" cy="84" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
              f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(w - 50, 72, t["accent"]))
     b.append(T(20, 150, "日記", 34, t["label"], 700))
+    b.append(T(20, 180, "残り 30 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     b.append(symbol("book", w / 2, 330, t["sec"]).replace('stroke-width="2"', 'stroke-width="3"')
              .replace(f'x="{w/2-9}"', f'x="{w/2-9}"'))
     b.append(T(w / 2, 390, "まだ日記がありません", 22, t["label"], 700, "middle"))
@@ -327,10 +351,14 @@ def iphone_ax5(theme):
     b.append(f'<circle cx="{w-38}" cy="84" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
              f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(w - 50, 72, t["accent"]))
     b.append(T(20, 176, "日記", 60, t["label"], 700))
-    b.append(f'<rect x="16" y="206" width="{w-32}" height="490" rx="26" fill="{t["cell"]}"/>')
+    b.append(T(20, 236, "残り 23 件", 49, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(20, 296, "（無料版は30", 49, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(20, 356, "件まで）", 49, t["sec"], 400, op=t["sec_op"]))
+    b.append(f'<rect x="16" y="380" width="{w-32}" height="520" rx="26" fill="{t["cell"]}"/>')
+    b.append(chevron(w - 44, 520, t["label"]))
     lines = [("10月24日", 49, "sec"), ("（土）", 49, "sec"), ("公園の", 53, "label"),
              ("銀杏が色づ", 53, "label"), ("いてきた。", 53, "label"), ("帰りにパ…", 53, "label")]
-    y = 270
+    y = 444
     for text, size, kind in lines:
         if kind == "sec":
             b.append(T(36, y, text, size, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
@@ -353,9 +381,9 @@ def ipad_narrow(theme):
     b.append(f'<circle cx="120" cy="80" r="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
              f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><rect x="109" y="70" width="22" height="20" rx="3"/>'
              f'<path d="M117 70v20"/></g>')
-    b.append(f'<circle cx="{w-44}" cy="80" r="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
-             + symbol_pencil(w - 56, 68, t["accent"]))
-    b.append(search_btn(w - 96, 80, t, fill=t["cell"]))  # search folds into a button in a narrow window
+    b.append(f'<circle cx="{w-96}" cy="80" r="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
+             + symbol_pencil(w - 108, 68, t["accent"]))
+    b.append(search_btn(w - 44, 80, t, fill=t["cell"]))  # search folds into a button at the trailing end
     b.append(T(24, 150, "すべての日記", 34, t["label"], 700))
     b.append(T(24, 180, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     b.append(f'<rect x="20" y="204" width="{w-40}" height="{len(ENTRIES)*76}" rx="26" fill="{t["cell"]}"/>')
@@ -462,15 +490,13 @@ def duo_inner(theme):
     lx, lw = 16, 300          # list pane
     dx = lx + lw + 16          # detail pane
     dw = w - dx - 16
-    # Top bar: sidebar toggle + search over the list, "今日を書く" over the detail.
+    # Top bar over the detail: 編集 (text) and 今日を書く (symbol). Search is a tab.
     btn = lambda cx, cy: (f'<circle cx="{cx}" cy="{cy}" r="22" fill="{t["glass"]}" '
                           f'fill-opacity="{t["glass_op"]}" stroke="{t["glass_stroke"]}"/>')
-    b.append(btn(lx + 22, 80) + f'<g fill="none" stroke="{t["label"]}" stroke-width="2">'
-             f'<rect x="{lx+11}" y="70" width="22" height="20" rx="3"/><path d="M{lx+19} 70v20"/></g>')
-    b.append(btn(lx + 72, 80) + f'<g fill="none" stroke="{t["label"]}" stroke-width="2">'
-             f'<circle cx="{lx+70}" cy="78" r="7"/><path d="M{lx+75} 83l5 5"/></g>')
     b.append(btn(w - 38, 80) + symbol_pencil(w - 50, 68, t["accent"]))
-    b.append(T(lx + 4, 148, "すべての日記", 28, t["label"], 700))
+    eb, ew = text_btn(w - 38 - 22 - 8 - 66, 58, "編集", t)
+    b.append(eb)
+    b.append(T(lx + 4, 148, "日記", 28, t["label"], 700))
     b.append(T(lx + 4, 176, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     # Scrolling list: allowed to cross the fold.
     rows = ENTRIES
@@ -491,8 +517,9 @@ def duo_inner(theme):
     b.append(f'<rect x="{dx}" y="196" width="{dw}" height="230" rx="24" fill="{t["cell"]}"/>')
     b.append(T(dx + 20, 238, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=t["cell"]))
     b.append(T(dx + 20, 266, "帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
-    b.append(T(dx + 20, 400, "晴れ・午後 5:12 に記録", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(T(dx + 20, 400, "晴れ・午後 5:12", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     assert 196 + 230 < fold - 12  # keep the card clear of the fold band
+    b.append(tab_bar(w, h, t, maxw=420))
     return svg(w, h, t["bg"], "".join(b))
 
 
@@ -532,9 +559,7 @@ def duo_inner_landscape(theme, folded=False):
                                mix(t["accent"], t["glass"], 0.12) if k == 0 else t["glass"]))
     # List pane with its own controls at the top of the pane.
     b.append(f'<rect x="8" y="8" width="{lw+16}" height="{h-16}" rx="28" fill="{t["cell"]}"/>')
-    b.append(f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><rect x="26" y="26" width="22" height="20" rx="3"/>'
-             f'<path d="M34 26v20"/></g>')
-    b.append(T(24, 98, "すべての日記", 28, t["label"], 700, bg=t["cell"]))
+    b.append(T(24, 98, "日記", 28, t["label"], 700, bg=t["cell"]))
     b.append(T(24, 126, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     for i, (d, s) in enumerate(ENTRIES):
         cy = 146 + i * 76
@@ -547,10 +572,12 @@ def duo_inner_landscape(theme, folded=False):
     # Detail pane.
     d, s = ENTRIES[0]
     b.append(T(dx + 8, 98, d, 28, t["label"], 700))
+    eb, ew = text_btn(dx + dw - 66, 24, "編集", t)  # text buttons stay in the horizontal bar
+    b.append(eb)
     b.append(f'<rect x="{dx}" y="120" width="{dw}" height="190" rx="24" fill="{t["cell"]}"/>')
     b.append(T(dx + 20, 162, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=t["cell"]))
     b.append(T(dx + 20, 190, "帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
-    b.append(T(dx + 20, 284, "晴れ・午後 5:12 に記録", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(T(dx + 20, 284, "晴れ・午後 5:12", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     return svg(w, h, t["bg"], "".join(b))
 
 
@@ -626,8 +653,8 @@ files = {
     "ipad-landscape-S-01-dark.svg": ipad("dark"),
     "mac-S-01-light.svg": mac("light"),
     "mac-S-01-dark.svg": mac("dark"),
-    "watch-ultra-S-01.svg": watch(),
-    "watch-ultra-S-01-aod.svg": watch_aod(),
+    "watch-ultra-S-07.svg": watch(),
+    "watch-ultra-S-07-aod.svg": watch_aod(),
     "iphone-duo-outer-S-01-light.svg": duo_outer("light"),
     "iphone-duo-outer-S-01-dark.svg": duo_outer("dark"),
     "iphone-duo-inner-S-01-light.svg": duo_inner("light"),
@@ -648,7 +675,7 @@ files = {
     "iphone-S-04-dark.svg": iphone_purchase("dark"),
     "iphone-S-06-permission-light.svg": iphone_permission("light"),
     "iphone-S-06-permission-dark.svg": iphone_permission("dark"),
-    "watch-ultra-S-01-ax3.svg": watch_ax3(),
+    "watch-ultra-S-07-ax3.svg": watch_ax3(),
 }
 for name, content in files.items():
     (OUT / name).write_text(content, encoding="utf-8")
