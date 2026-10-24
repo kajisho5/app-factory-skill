@@ -12,7 +12,7 @@ App StoreのQRリーダー系アプリは、無料に見せて高額な週額サ
 
 ## 技術条件
 
-- SwiftUI + Swift（最新の安定版）、iOS 17.0以上、iPhone / iPad対応
+- SwiftUI + Swift（最新の安定版）、iOS 26.0以上、iPhone / iPad対応
 - サードパーティライブラリ禁止（Apple純正フレームワークのみ）
 - 履歴の保存は SwiftData
 - 課金は StoreKit 2、非消耗型のアプリ内課金1点のみ

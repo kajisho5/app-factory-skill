@@ -13,7 +13,7 @@
 
 ## 技術条件
 
-- SwiftUI + Swift（最新の安定版）、iOS 17.0以上、iPhone / iPad対応。Macは「Designed for iPad」で動作する前提（Mac専用UIは作らない）
+- SwiftUI + Swift（最新の安定版）、iOS 26.0以上、iPhone / iPad対応。Macは「Designed for iPad」で動作する前提（Mac専用UIは作らない）
 - サードパーティライブラリ禁止（Apple純正フレームワークのみ）
 - データ保存は SwiftData、印刷は AirPrint（UIPrintInteractionController）、PDF出力は UIGraphicsPDFRenderer
 - 課金は StoreKit 2、非消耗型のアプリ内課金1点のみ
