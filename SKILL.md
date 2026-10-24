@@ -1,9 +1,9 @@
 ---
-name: app-factory-skill
+name: hig-design-skill
 description: 'Design Apple-platform app interfaces that follow the Human Interface Guidelines: from an app idea or spec, produce a design spec (screens, navigation per platform, states, color and type tokens, SF Symbols, accessibility) and SVG mockups with PNG previews for iPhone, iPhone Duo (two-iPhone presentation), iPad, Mac and Apple Watch, in light and dark. Canvas sizes match App Store screenshot specs; includes scripts to frame devices, export opaque PNGs and check canvas size, minimum text size and contrast; then audits the result with design-check-skill until three consecutive passes find no new gaps. Uses only fictional sample data. Does not write app code or development prompts. Use when the user asks to design, mock up or lay out screens for an iPhone, iPad, Mac or Apple Watch app, or for HIG-compliant app mockups or App Store screenshot mocks.'
 ---
 
-# app-factory-skill
+# hig-design-skill
 
 Appleの Human Interface Guidelines（HIG）に沿って、iPhone / iPhone Duo / iPad / Mac / Apple Watch のアプリ画面を**デザインする**スキルです。成果物は「デザイン設計書」と「SVGモック＋PNGプレビュー」。アプリのコード実装や、開発用プロンプトの作成はしません。
 

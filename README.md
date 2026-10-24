@@ -1,4 +1,4 @@
-# app-factory-skill
+# hig-design-skill
 
 Appleの Human Interface Guidelines（HIG）に沿って、**iPhone / iPhone Duo / iPad / Mac / Apple Watch** のアプリ画面をデザインするAgent Skillです。アプリのアイデアや仕様を渡すと、デザイン設計書と、ライト／ダーク両方のSVGモック＋PNGプレビューを作ります。
 
@@ -15,7 +15,7 @@ Appleの Human Interface Guidelines（HIG）に沿って、**iPhone / iPhone Duo
 **Claude Code（個人用）** — design-check-skill と一緒に入れます。
 
 ```bash
-git clone https://github.com/kajisho5/app-factory-skill ~/.claude/skills/app-factory-skill
+git clone https://github.com/kajisho5/hig-design-skill ~/.claude/skills/hig-design-skill
 git clone https://github.com/kajisho5/design-check-skill ~/.claude/skills/design-check-skill
 pip install cairosvg pillow
 ```
@@ -23,7 +23,7 @@ pip install cairosvg pillow
 **Claude Code（プロジェクト用）** — リポジトリ直下で：
 
 ```bash
-git clone https://github.com/kajisho5/app-factory-skill .claude/skills/app-factory-skill
+git clone https://github.com/kajisho5/hig-design-skill .claude/skills/hig-design-skill
 git clone https://github.com/kajisho5/design-check-skill .claude/skills/design-check-skill
 ```
 
