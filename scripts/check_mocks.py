@@ -9,8 +9,9 @@ Checks per SVG:
     full-canvas <rect> fill. Put data-bg="#RRGGBB" on a <g> or <text> drawn over
     buttons, cards or images so the check uses the right color.
   - text that probably runs off the canvas (rough width estimate; WARN only)
-  - iPhone Duo inner screens: text on the fold band (centre ±12pt, horizontal in portrait,
-    vertical in landscape). Mark scrolling body text or lists with data-fold-ok. WARN only
+  - iPhone Duo inner screens drawn partially folded (file name contains "-folded"): text on the
+    fold band (centre ±13pt, vertical in landscape, horizontal in portrait). The fold only exists
+    when partially folded (zero width when fully open). Mark scrolling text/lists with data-fold-ok
   - <style> blocks (their rules are not checked; WARN only - use attributes instead)
   - every *-light.svg has a *-dark.svg (and vice versa)
   - a PNG exists next to it, is not older than the SVG, and has no alpha channel
@@ -26,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from devices import CANVASES, MIN_FONT_PT, canvas_for  # noqa: E402
 
 NAMED = {"white": "#FFFFFF", "black": "#000000"}
-FOLD_BAND = 12  # pt either side of the iPhone Duo inner fold (rule of thumb, not an Apple value)
+FOLD_BAND = 13  # pt either side of the iPhone Duo inner fold (rule of thumb, not an Apple value)
 
 
 def parse_color(v):
@@ -135,7 +136,7 @@ def check_svg(path: Path, errors, warns):
                 left = x - est if anchor == "end" else x - est / 2 if anchor == "middle" else x
                 if left < -1 or left + est > w + 1:
                     warns.append(f"{path}: text '{text}' may run off the canvas (estimated width {est:.0f}pt)")
-            if size is not None and local(el.tag) == "text" and name and name.startswith("iphone-duo-inner") \
+            if size is not None and local(el.tag) == "text" and name and name.startswith("iphone-duo-inner") and "-folded" in path.name \
                     and el.get("x") and el.get("y") and "transform" not in s:
                 # Fold band: horizontal across the middle in portrait, vertical in landscape.
                 full = "".join(el.itertext()).strip()

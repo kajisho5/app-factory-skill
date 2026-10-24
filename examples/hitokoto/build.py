@@ -347,7 +347,7 @@ def duo_side_column(w, h, t, active=0):
     (HIG "Designing for iPhone Duo"). Exact positions are not published: approximation."""
     x = w - 52
     cx = x + 26
-    parts = [f'<rect x="{cx-7}" y="16" width="14" height="40" rx="7" fill="#000"/>',
+    parts = [f'<circle cx="{cx}" cy="34" r="16" fill="#000"/>',
              T(cx, 78, "9:41", 13, t["label"], 600, "middle")]
     # Toolbar: primary action first, then search. Symbols only (text buttons stay horizontal).
     for k, y0 in enumerate((112, 162)):
@@ -445,6 +445,57 @@ def duo_inner(theme):
     return svg(w, h, t["bg"], "".join(b))
 
 
+def duo_inner_landscape(theme, folded=False):
+    """Inner display, landscape (as in Apple's Mail example): the list pane keeps its own
+    controls at its top; the detail pane's controls and the status bar run down the trailing
+    edge. Fully open: list narrower than detail. Partially folded: the fold runs vertically
+    down the centre, panes become equal and nothing sits on the fold band."""
+    t = THEMES[theme]
+    w, h = 951, 669
+    side = 52
+    cx = w - side / 2
+    band = 13
+    if folded:
+        lw = w / 2 - band - 16
+        dx = w / 2 + band
+    else:
+        lw = 330
+        dx = 16 + lw + 16
+    dw = w - side - dx - 8
+    b = [T(cx, 34, "9:41", 13, t["label"], 600, "middle")]
+    # Trailing-edge controls for the detail pane: primary action first, then search.
+    for k, y0 in enumerate((80, 130)):
+        b.append(f'<circle cx="{cx}" cy="{y0}" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
+                 f'stroke="{t["glass_stroke"]}"/>')
+        if k == 0:
+            b.append(symbol_pencil(cx - 12, y0 - 12, t["accent"]))
+        else:
+            b.append(f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><circle cx="{cx-2}" cy="{y0-2}" r="7"/>'
+                     f'<path d="M{cx+3} {y0+3}l5 5"/></g>')
+    # List pane with its own controls at the top of the pane.
+    b.append(f'<rect x="8" y="8" width="{lw+16}" height="{h-16}" rx="28" fill="{t["cell"]}"/>')
+    b.append(f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><rect x="26" y="26" width="22" height="20" rx="3"/>'
+             f'<path d="M34 26v20"/></g>')
+    b.append(T(24, 98, "すべての日記", 28, t["label"], 700, bg=t["cell"]))
+    b.append(T(24, 126, "残り 23 件", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    for i, (d, s) in enumerate(ENTRIES):
+        cy = 146 + i * 76
+        if i == 0:
+            b.append(f'<rect x="16" y="{cy+6}" width="{lw}" height="64" rx="18" fill="{t["accent"]}" '
+                     f'fill-opacity="0.14"/>')
+        n = 15 if folded else 16
+        b.append(T(32, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+        b.append(T(32, cy + 56, s[:n] + ("…" if len(s) > n else ""), 17, t["label"], 400, bg=t["cell"]))
+    # Detail pane.
+    d, s = ENTRIES[0]
+    b.append(T(dx + 8, 98, d, 28, t["label"], 700))
+    b.append(f'<rect x="{dx}" y="120" width="{dw}" height="190" rx="24" fill="{t["cell"]}"/>')
+    b.append(T(dx + 20, 162, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=t["cell"]))
+    b.append(T(dx + 20, 190, "帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
+    b.append(T(dx + 20, 284, "晴れ・午後 5:12 に記録", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    return svg(w, h, t["bg"], "".join(b))
+
+
 files = {
     "iphone-S-01-light.svg": iphone_list("light"),
     "iphone-S-01-dark.svg": iphone_list("dark"),
@@ -460,6 +511,10 @@ files = {
     "iphone-duo-outer-S-01-dark.svg": duo_outer("dark"),
     "iphone-duo-inner-S-01-light.svg": duo_inner("light"),
     "iphone-duo-inner-S-01-dark.svg": duo_inner("dark"),
+    "iphone-duo-inner-landscape-S-01-light.svg": duo_inner_landscape("light"),
+    "iphone-duo-inner-landscape-S-01-dark.svg": duo_inner_landscape("dark"),
+    "iphone-duo-inner-landscape-S-01-folded-light.svg": duo_inner_landscape("light", True),
+    "iphone-duo-inner-landscape-S-01-folded-dark.svg": duo_inner_landscape("dark", True),
     "iphone-S-03-light.svg": iphone_compose("light"),
     "iphone-S-03-dark.svg": iphone_compose("dark"),
     "iphone-S-01-empty-light.svg": iphone_empty("light"),
