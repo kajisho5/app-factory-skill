@@ -189,7 +189,7 @@ def iphone_list(theme):
     b.append(f'<circle cx="{w-38}" cy="84" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
              f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(w - 50, 72, t["label"]))
     b.append(T(20, 150, "日記", 34, t["label"], 700))
-    b.append(T(20, 180, "残り 23件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(20, 180, "残り 25件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     y = 204
     b.append(f'<rect x="16" y="{y}" width="{w-32}" height="{len(ENTRIES)*76}" rx="26" fill="{t["cell"]}"/>')
     for i, (d, s) in enumerate(ENTRIES):
@@ -238,17 +238,16 @@ def ipad(theme):
     items = [("book", "すべての日記", True), ("cal", "カレンダー", False), ("gear", "設定", False)]
     for i, (sym, lab, on) in enumerate(items):
         y = 132 + i * 52
-        col = t["accent"] if on else t["label"]
         rowbg = mix(t["accent"], t["cell"], 0.14) if on else t["cell"]
         if on:
             b.append(f'<rect x="24" y="{y}" width="{sw-24}" height="44" rx="12" fill="{rowbg}"/>')
-        b.append(symbol(sym, 52, y + 22, col))
+        b.append(symbol(sym, 52, y + 22, t["accent"]))  # sidebar icons use the accent colour
         b.append(T(76, y + 28, lab, 17, t["label"], 600 if on else 400, bg=rowbg))
     # List column + detail.
     lx = sw + 36
     lw = 400
     b.append(T(lx, 104, "すべての日記", 34, t["label"], 700))
-    b.append(T(lx, 132, "残り 23件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(lx, 132, "残り 25件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     b.append(f'<rect x="{lx}" y="148" width="{lw}" height="{len(ENTRIES)*76}" rx="26" fill="{t["cell"]}"/>')
     for i, (d, s) in enumerate(ENTRIES):
         cy = 148 + i * 76
@@ -309,7 +308,7 @@ def mac(theme):
         b.append(T(wx + 52, y + 19, lab, 13, t["label"], 600 if on else 400, bg=rowbg))
     lx = wx + sw + 24
     b.append(T(lx, wy + 26, "すべての日記", 13, t["label"], 700, bg=t["win"]))
-    b.append(T(lx, wy + 43, "残り 23件（無料版は 30件まで）", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
+    b.append(T(lx, wy + 43, "残り 25件（無料版は 30件まで）", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
     # Toolbar: 編集, 今日を書く, then the search field at the trailing end (⌘F).
     sx = wx + ww - 196
     b.append(f'<rect x="{sx-40}" y="{wy+14}" width="28" height="28" rx="6" fill="{t["bar"]}"/>'
@@ -400,7 +399,7 @@ def iphone_ax5(theme):
     b.append(f'<circle cx="{w-38}" cy="84" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
              f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(w - 50, 72, t["label"]))
     b.append(T(20, 176, "日記", 60, t["label"], 700))
-    b.append(T(20, 236, "残り 23件", 49, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(20, 236, "残り 25件", 49, t["sec"], 400, op=t["sec_op"]))
     b.append(T(20, 296, "（無料版は", 49, t["sec"], 400, op=t["sec_op"]))
     b.append(T(20, 356, "30件まで）", 49, t["sec"], 400, op=t["sec_op"]))
     b.append(f'<rect x="16" y="380" width="{w-32}" height="520" rx="26" fill="{t["cell"]}"/>')
@@ -434,7 +433,7 @@ def ipad_narrow(theme):
              + symbol_pencil(w - 108, 68, t["label"]))
     b.append(search_btn(w - 44, 80, t, fill=t["cell"]))  # search folds into a button at the trailing end
     b.append(T(24, 150, "すべての日記", 34, t["label"], 700))
-    b.append(T(24, 180, "残り 23件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(24, 180, "残り 25件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     b.append(f'<rect x="20" y="204" width="{w-40}" height="{len(ENTRIES)*76}" rx="26" fill="{t["cell"]}"/>')
     for i, (d, s) in enumerate(ENTRIES):
         cy = 204 + i * 76
@@ -521,7 +520,7 @@ def duo_outer(theme):
     cw = w - 52  # content width left of the side column
     b = [duo_side_column(w, h, t)]
     b.append(T(20, 64, "日記", 34, t["label"], 700))
-    b.append(T(20, 94, "残り 23件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(20, 94, "残り 25件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     y = 116
     rows = ENTRIES
     b.append(f'<rect x="16" y="{y}" width="{cw-24}" height="{len(rows)*76}" rx="26" fill="{t["cell"]}"/>')
@@ -556,7 +555,7 @@ def duo_inner(theme):
     eb, ew = text_btn(w - 38 - 22 - 8 - 44 - 8 - 66, 58, "編集", t)
     b.append(eb)
     b.append(T(lx + 4, 148, "日記", 28, t["label"], 700))
-    b.append(T(lx + 4, 176, "残り 23件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(lx + 4, 176, "残り 25件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     # Scrolling list: allowed to cross the fold.
     rows = ENTRIES
     ly = 196
@@ -620,7 +619,7 @@ def duo_inner_landscape(theme, folded=False):
     # List pane with its own controls at the top of the pane.
     b.append(f'<rect x="8" y="8" width="{lw+16}" height="{h-16}" rx="28" fill="{t["cell"]}"/>')
     b.append(T(24, 98, "日記", 28, t["label"], 700, bg=t["cell"]))
-    b.append(T(24, 126, "残り 23件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(T(24, 126, "残り 25件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     for i, (d, s) in enumerate(ENTRIES):
         cy = 146 + i * 76
         rowbg = mix(t["accent"], t["cell"], 0.14) if i == 0 else t["cell"]
@@ -734,7 +733,7 @@ def mac_calendar(theme):
         b.append(T(wx + 52, y + 19, lab, 13, t["label"], 600 if on else 400, bg=rowbg))
     gx = wx + sw + 40
     b.append(T(gx, wy + 26, "カレンダー", 13, t["label"], 700, bg=t["win"]))
-    b.append(T(gx, wy + 43, "残り 23件（無料版は 30件まで）", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
+    b.append(T(gx, wy + 43, "残り 25件（無料版は 30件まで）", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
     b.append(f'<rect x="{gx-8}" y="{wy+52}" width="{ww-sw-56}" height="0.5" fill="{t["sep"]}"/>')
     b.append(T(gx, wy + 100, "2026年10月", 22, t["label"], 700, bg=t["win"]))
     # previous / next month (28pt controls)
@@ -747,7 +746,7 @@ def mac_calendar(theme):
     gy = wy + 130
     for k, d in enumerate("日月火水木金土"):
         b.append(T(gx + k * cw + cw / 2, gy, d, 11, t["sec"], 600, "middle", op=t["sec_op"], bg=t["win"]))
-    written = {12, 18, 20, 21, 22, 23, 24}  # 7 entries = 「残り 23件」
+    written = {20, 21, 22, 23, 24}  # 5 entries = 「残り 25件」 (same as the list)
     first = 4  # 1 Oct 2026 is a Thursday
     for day in range(1, 32):
         idx = first + day - 1
