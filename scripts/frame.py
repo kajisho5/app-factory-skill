@@ -5,14 +5,17 @@ The frames are neutral rounded shapes, not drawings of a specific Apple product.
 Screen SVGs keep their own canvas size (see devices.py); this script nests them.
 
 Name single-device outputs "framed-<screen name>.svg" so the export/check scripts treat
-them as presentation images, not screen mocks. Duo outputs use "iphone-duo-...".
+them as presentation images, not screen mocks. Pair outputs use "pair-...".
 
 Usage:
   frame.py iphone SCREEN.svg -o OUT.svg
   frame.py ipad   SCREEN.svg -o OUT.svg          # landscape or portrait, from the screen size
   frame.py mac    SCREEN.svg -o OUT.svg
   frame.py watch  SCREEN.svg -o OUT.svg
-  frame.py duo    LEFT.svg RIGHT.svg -o OUT.svg [--bg "#F2F2F7"] [--caption-left TEXT --caption-right TEXT]
+  frame.py duo-outer SCREEN.svg -o OUT.svg       # iPhone Duo closed (outer display)
+  frame.py duo-inner SCREEN.svg -o OUT.svg       # iPhone Duo open (inner display, crease shown)
+  frame.py pair   LEFT.svg RIGHT.svg -o OUT.svg [--bg "#F2F2F7"] [--caption-left TEXT --caption-right TEXT]
+                                                 # two framed iPhones side by side (marketing image)
 """
 import argparse
 import re
@@ -61,6 +64,10 @@ def device(kind, path, ox, oy, scale, uid):
         bezel, r_screen, r_body = 22, 18, 40
     elif kind == "watch":
         bezel, r_screen, r_body = 14, 42, 56
+    elif kind == "duo-outer":
+        bezel, r_screen, r_body = 12, 44, 56
+    elif kind == "duo-inner":
+        bezel, r_screen, r_body = 12, 34, 46
     elif kind == "mac":
         bezel, r_screen, r_body = 18, 10, 22
     else:
@@ -83,6 +90,10 @@ def device(kind, path, ox, oy, scale, uid):
         pw, ph = 125 * scale, 37 * scale
         parts.append(f'<rect x="{ox + bw / 2 - pw / 2:g}" y="{oy + b + 11 * scale:g}" width="{pw:g}" '
                      f'height="{ph:g}" rx="{ph / 2:g}" fill="#000"/>')
+    if kind == "duo-inner":
+        # Fold line down the middle (presentation only; the real crease is barely visible).
+        parts.append(f'<rect x="{ox + bw / 2 - 0.5 * scale:g}" y="{oy + b:g}" width="{1 * scale:g}" '
+                     f'height="{sh:g}" fill="#000" fill-opacity="0.12"/>')
     if kind == "mac":
         # Simple stand under the display.
         parts.append(f'<rect x="{ox + bw * 0.42:g}" y="{oy + bh:g}" width="{bw * 0.16:g}" '
@@ -102,15 +113,15 @@ def wrap(width, height, content, bg=None):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("kind", choices=["iphone", "ipad", "mac", "watch", "duo"])
+    ap.add_argument("kind", choices=["iphone", "ipad", "mac", "watch", "duo-outer", "duo-inner", "pair"])
     ap.add_argument("screens", nargs="+")
     ap.add_argument("-o", "--out", required=True)
-    ap.add_argument("--bg", default=None, help="background color (duo default #F2F2F7)")
+    ap.add_argument("--bg", default=None, help="background color (pair default #F2F2F7)")
     ap.add_argument("--caption-left", default="")
     ap.add_argument("--caption-right", default="")
     a = ap.parse_args()
 
-    if a.kind != "duo":
+    if a.kind != "pair":
         if len(a.screens) != 1:
             sys.exit("one screen expected")
         pad = 24
@@ -119,13 +130,13 @@ def main():
         return
 
     if len(a.screens) != 2:
-        sys.exit("duo needs exactly two screens: LEFT RIGHT")
+        sys.exit("pair needs exactly two screens: LEFT RIGHT")
     W, H = 1600, 1000
     bg = a.bg or "#F2F2F7"
     w0, h0, _, _ = load_screen(a.screens[0])
     w1, h1, _, _ = load_screen(a.screens[1])
     if (w0, h0) != (w1, h1):
-        sys.exit("duo: both screens must use the same canvas (D-03: same size)")
+        sys.exit("pair: both screens must use the same canvas")
     caption = bool(a.caption_left or a.caption_right)
     avail_h = H - (190 if caption else 110)
     scale = avail_h / (h0 + 28)

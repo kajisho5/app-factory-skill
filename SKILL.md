@@ -1,6 +1,6 @@
 ---
 name: hig-design-skill
-description: 'Design Apple-platform app interfaces that follow the Human Interface Guidelines: from an app idea or spec, produce a design spec (screens, navigation per platform, states, color and type tokens, SF Symbols, accessibility) and SVG mockups with PNG previews for iPhone, iPhone Duo (two-iPhone presentation), iPad, Mac and Apple Watch, in light and dark. Canvas sizes match App Store screenshot specs; includes scripts to frame devices, export opaque PNGs and check canvas size, minimum text size and contrast; then audits the result with design-check-skill until three consecutive passes find no new gaps. Uses only fictional sample data. Does not write app code or development prompts. Use when the user asks to design, mock up or lay out screens for an iPhone, iPad, Mac or Apple Watch app, or for HIG-compliant app mockups or App Store screenshot mocks.'
+description: 'Design Apple-platform app interfaces that follow the Human Interface Guidelines: from an app idea or spec, produce a design spec (screens, navigation per platform, states, color and type tokens, SF Symbols, accessibility) and SVG mockups with PNG previews for iPhone, iPhone Duo (the foldable iPhone: outer and inner displays), iPad, Mac and Apple Watch, in light and dark. Canvas sizes match App Store screenshot specs; scripts frame devices, export opaque PNGs and check canvas size, minimum text size and contrast; the result is audited with design-check-skill until three consecutive passes find no new gaps. Uses only fictional sample data. Does not write app code. Use when the user asks to design, mock up or lay out screens for an iPhone, iPhone Duo, iPad, Mac or Apple Watch app, or for HIG-compliant app mockups or App Store screenshot mocks.'
 ---
 
 # hig-design-skill
@@ -17,18 +17,19 @@ design/
   mocks/
     iphone-S-01-light.svg / .png
     iphone-S-01-dark.svg  / .png
-    iphone-duo-S-01-S-02-light.svg / .png
+    iphone-duo-outer-S-01-light.svg / .png
+    iphone-duo-inner-S-01-light.svg / .png
     ipad-landscape-S-01-light.svg / .png
     mac-S-01-light.svg / .png
     watch-ultra-S-01.svg / .png
 ```
 
-- ファイル名は `<端末>-<画面ID>-<light|dark>.svg`。端末名は `scripts/devices.py` の名前（`iphone`、`ipad-landscape`、`ipad-portrait`、`mac`、`watch-ultra` など）を使う。この名前でキャンバス寸法と書き出し倍率が決まる
+- ファイル名は `<端末>-<画面ID>-<light|dark>.svg`。端末名は `scripts/devices.py` の名前（`iphone`、`iphone-duo-outer`、`iphone-duo-inner`、`ipad-landscape`、`ipad-portrait`、`mac`、`watch-ultra` など）を使う。この名前でキャンバス寸法と書き出し倍率が決まる
 - 完成例： `examples/hitokoto/`（架空のアプリ「ひとこと日記」）
 
 ## ワークフロー
 
-1. **前提を固める** — ユーザーの説明から、アプリの目的、主な利用場面、対応プラットフォーム、画面の向き、iPhone Duo の要否を決める。対応プラットフォームが書かれていなければ、iPhone＋iPad を基本とし、Mac / Watch は利用場面に価値がある場合だけ提案する。機能の範囲やプラットフォームの追加など、ユーザーが決めるべきことは推測で埋めず、選択肢と推奨案を出す
+1. **前提を固める** — ユーザーの説明から、アプリの目的、主な利用場面、対応プラットフォーム、画面の向きを決める。対応プラットフォームが書かれていなければ、iPhone＋iPhone Duo＋iPad を基本とし（iPhone アプリは iPhone Duo でも動くため）、Mac / Watch は利用場面に価値がある場合だけ提案する。機能の範囲やプラットフォームの追加など、ユーザーが決めるべきことは推測で埋めず、選択肢と推奨案を出す
 2. **設計書を書く** — `templates/design-spec.md` を `design/design-spec.md` にコピーして埋める。数値は `references/hig-specs.md` から取る
    - 画面一覧とプラットフォーム別のナビゲーション（iPhoneはタブバー、iPadはタブバーかサイドバー、Macはサイドバー＋一覧＋詳細、Watchは浅い縦ページ）
    - 全画面の状態（空状態・読み込み中・エラー・権限拒否・無料版の上限）
@@ -42,11 +43,17 @@ design/
    - サンプルデータは**明らかに架空**の人名・住所・電話番号・会社名・日付の内容にする（実在の人物・住所・企業・作品を使わない）
    - アイコンは設計書に SF Symbols の名前を書く。モックには、Mac の SF Symbols アプリから書き出したSVGを使えるならそれを使い、使えない環境では単純な線画で代わりに描く（SF Symbols の利用条件は SF Symbols アプリと https://developer.apple.com/sf-symbols/ で確認する）
 4. **全プラットフォーム・両モードに広げる** — 対応プラットフォームごとに主要画面をライトとダークで描く。ダークは色を反転するだけでなく、システムカラーのダーク値に置き換える
+   - **iPhone Duo**（折りたたみ iPhone）： 外側（`iphone-duo-outer`、通常の iPhone と同じサイズクラス）と内側（`iphone-duo-inner`、横・縦とも regular）の両方を描く。内側はタブをサイドバーにし、サイドバー＋一覧＋詳細の構成にする。向きではなくサイズクラスで組み替える（内側はアプリの対応する向きの指定に従わない）。標準のバーのボタンはステータスバーの下に縦に並び、ステータスバーと Dynamic Island は画面の横側に来る（正確な位置は未公開なので近似で描き、設計書に「近似」と書く）。内側の Split View（画面の左右どちら側か半分）でも崩れない構成を設計書に書く。詳細は `references/hig-specs.md` の「iPhone Duo」
    - **iPad**： 横向き（`ipad-landscape`）を基本に、必要なら縦向きも描く。iPhone画面の引き伸ばしにしない
    - **Mac**： 1440 × 900 pt のデスクトップの中にウィンドウを置き、メニューバー（アプリ名・ファイル・編集・表示・ウインドウ・ヘルプ）も描く
    - **Apple Watch**： 一目で分かる1画面。背景は黒、文字は標準16pt以上
-   - **端末フレーム**： 掲載用に枠付きの画像が欲しい場合は `scripts/frame.py iphone|ipad|mac|watch` で作り、出力名は `framed-<元の画面名>.svg` にする（スクリーンショット用の画面モックと区別するため）
-   - **iPhone Duo**： 描いた iPhone 画面2枚から `scripts/frame.py duo` で作る。2枚は同じモード・同じ時刻・同じデータにし、一覧と詳細、操作前と操作後のように役割が分かる組み合わせにする
+   - **状態と条件のモック**（design-check-skill の C-03・C-13・C-16・I-02 に対応）： 主要画面について、少なくとも次も描く
+     - 空状態： `iphone-S-01-empty-light.svg` / `-dark.svg`
+     - 入力がある画面はキーボード表示時（入力欄と確定ボタンが隠れないこと）
+     - 最大文字サイズ（AX5）： `iphone-S-01-light-ax5.svg`（行を省略せず縦に積む組み替えを見せる）
+     - iPad の細いウィンドウ： `ipad-narrow-S-01-light.svg` / `-dark.svg`（サイドバーを畳んだ状態など）
+   - **端末フレーム**： 掲載用に枠付きの画像が欲しい場合は `scripts/frame.py iphone|duo-outer|duo-inner|ipad|mac|watch` で作り、出力名は `framed-<元の画面名>.svg` にする（スクリーンショット用の画面モックと区別するため）
+   - **2台並びの掲載用画像（pair）**： 必要なら、描いた iPhone 画面2枚から `scripts/frame.py pair` で作る（出力名は `pair-...`）。2枚は同じモード・同じ時刻・同じデータにし、一覧と詳細のように役割が分かる組み合わせにする
 5. **書き出しと機械チェック** —
    ```bash
    python3 scripts/export_png.py design/mocks      # SVG → 透過なしPNG（スクリーンショット寸法）
@@ -82,7 +89,7 @@ design/
 - `references/hig-specs.md` — キャンバス寸法、Text Styles、コントロール、コントラスト、モック用の色の近似値、ナビゲーションの型（出典つき）
 - `templates/design-spec.md` — 設計書の雛形
 - `scripts/devices.py` — 端末名とキャンバス寸法・倍率・最小文字サイズ
-- `scripts/frame.py` — 画面SVGを汎用の端末フレームに入れる。iPhone Duo を作る
+- `scripts/frame.py` — 画面SVGを汎用の端末フレームに入れる（iPhone Duo の外側・内側を含む）。2台並びの掲載用画像（pair）を作る
 - `scripts/export_png.py` — SVG → 透過なしPNG（スクリーンショット寸法）
 - `scripts/check_mocks.py` — 寸法・最小文字サイズ・コントラスト・ライト/ダークの対・PNGの有無と透過を確認
-- `examples/hitokoto/` — 完成例（設計書・生成スクリプト・モック）
+- `examples/hitokoto/` — 完成例（設計書・生成スクリプト・モック）。`bash examples/hitokoto/make.sh` で再生成と検査

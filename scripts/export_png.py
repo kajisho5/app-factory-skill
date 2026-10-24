@@ -67,7 +67,7 @@ def resolve_fonts(svg_text: str) -> str:
 
 def export(svg: Path, default_scale: float, bg: str):
     name = canvas_for(svg.name)
-    scale = CANVASES[name][2] if name and name != "iphone-duo" else default_scale
+    scale = CANVASES[name][2] if name and name != "pair" else default_scale
     src = resolve_fonts(svg.read_text(encoding="utf-8"))
     png_bytes = cairosvg.svg2png(bytestring=src.encode("utf-8"), scale=scale)
     img = Image.open(io.BytesIO(png_bytes)).convert("RGBA")
@@ -76,7 +76,7 @@ def export(svg: Path, default_scale: float, bg: str):
     out = svg.with_suffix(".png")
     flat.save(out, optimize=True)
     note = ""
-    if name and name != "iphone-duo":
+    if name and name != "pair":
         w, h, s, _ = CANVASES[name]
         expected = (round(w * s), round(h * s))
         note = "OK" if flat.size == expected else f"SIZE MISMATCH (expected {expected[0]}x{expected[1]})"

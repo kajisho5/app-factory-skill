@@ -232,6 +232,179 @@ def watch():
     return svg(w, h, "#000000", "".join(b))
 
 
+def iphone_empty(theme):
+    t = THEMES[theme]
+    w, h = 402, 874
+    b = [status_bar(w, t)]
+    b.append(f'<circle cx="{w-38}" cy="84" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
+             f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(w - 50, 72, t["accent"]))
+    b.append(T(20, 150, "日記", 34, t["label"], 700))
+    b.append(symbol("book", w / 2, 330, t["sec"]).replace('stroke-width="2"', 'stroke-width="3"')
+             .replace(f'x="{w/2-9}"', f'x="{w/2-9}"'))
+    b.append(T(w / 2, 390, "まだ日記がありません", 22, t["label"], 700, "middle"))
+    b.append(T(w / 2, 424, "今日のことを、ひとことだけ書いてみましょう。", 15, t["sec"], 400, "middle", op=t["sec_op"]))
+    b.append(f'<rect x="{w/2-90}" y="456" width="180" height="50" rx="25" fill="{t["accent"]}"/>')
+    b.append(T(w / 2, 488, "今日を書く", 17, "#FFFFFF", 600, "middle", bg=t["accent"]))
+    b.append(tab_bar(w, h, t))
+    b.append(f'<rect x="{w/2-70}" y="{h-13}" width="140" height="5" rx="2.5" fill="{t["label"]}"/>')
+    return svg(w, h, t["bg"], "".join(b))
+
+
+def iphone_ax5(theme):
+    """Largest accessibility text size (AX5): Large Title 60pt, Subhead 49pt, Body 53pt.
+    Rows stack and wrap instead of truncating; the tab bar keeps its own system size."""
+    t = THEMES[theme]
+    w, h = 402, 874
+    b = [status_bar(w, t)]
+    b.append(f'<circle cx="{w-38}" cy="84" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
+             f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(w - 50, 72, t["accent"]))
+    b.append(T(20, 176, "日記", 60, t["label"], 700))
+    b.append(f'<rect x="16" y="206" width="{w-32}" height="490" rx="26" fill="{t["cell"]}"/>')
+    lines = [("10月24日", 49, "sec"), ("（土）", 49, "sec"), ("公園の", 53, "label"),
+             ("銀杏が色づ", 53, "label"), ("いてきた。", 53, "label"), ("帰りに…", 53, "label")]
+    y = 270
+    for text, size, kind in lines:
+        if kind == "sec":
+            b.append(T(36, y, text, size, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+        else:
+            b.append(T(36, y, text, size, t["label"], 400, bg=t["cell"]))
+        y += 70
+    b.append(tab_bar(w, h, t))
+    b.append(f'<rect x="{w/2-70}" y="{h-13}" width="140" height="5" rx="2.5" fill="{t["label"]}"/>')
+    return svg(w, h, t["bg"], "".join(b))
+
+
+def ipad_narrow(theme):
+    """Narrow iPad window: the sidebar collapses to a button, the list fills the width."""
+    t = THEMES[theme]
+    w, h = 600, 1032
+    b = [T(24, 34, "9:41", 15, t["label"], 600)]
+    b.append(f'<circle cx="44" cy="80" r="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
+             f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><rect x="33" y="70" width="22" height="20" rx="3"/>'
+             f'<path d="M41 70v20"/></g>')
+    b.append(f'<circle cx="{w-44}" cy="80" r="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
+             + symbol_pencil(w - 56, 68, t["accent"]))
+    b.append(T(24, 150, "すべての日記", 34, t["label"], 700))
+    b.append(T(24, 180, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(f'<rect x="20" y="204" width="{w-40}" height="{len(ENTRIES)*76}" rx="26" fill="{t["cell"]}"/>')
+    for i, (d, s) in enumerate(ENTRIES):
+        cy = 204 + i * 76
+        b.append(T(40, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+        b.append(T(40, cy + 56, s[:28] + ("…" if len(s) > 28 else ""), 17, t["label"], 400, bg=t["cell"]))
+        if i < len(ENTRIES) - 1:
+            b.append(f'<rect x="40" y="{cy+75.5}" width="{w-60}" height="0.5" fill="{t["sep"]}"/>')
+    return svg(w, h, t["bg"], "".join(b))
+
+
+def iphone_compose(theme):
+    """S-03: new entry in a sheet (medium detent, grabber, Cancel / prominent Save).
+    The input sits above the keyboard so it is never covered (C-16)."""
+    t = THEMES[theme]
+    w, h = 402, 874
+    dim = "#000000"
+    b = [status_bar(w, t)]
+    b.append(T(20, 150, "日記", 34, t["label"], 700))
+    b.append(f'<rect width="{w}" height="{h}" fill="{dim}" fill-opacity="{0.25 if theme == "light" else 0.5}"/>')
+    sy = 300
+    b.append(f'<rect x="8" y="{sy}" width="{w-16}" height="{h-sy+40}" rx="38" fill="{t["cell"]}"/>')
+    b.append(f'<rect x="{w/2-18}" y="{sy+8}" width="36" height="5" rx="2.5" fill="{t["sep"]}"/>')
+    b.append(f'<rect x="24" y="{sy+26}" width="96" height="44" rx="22" fill="{t["bg"]}"/>')
+    b.append(T(72, sy + 54, "キャンセル", 15, t["label"], 400, "middle", bg=t["bg"]))
+    b.append(T(w / 2, sy + 54, "10月24日（土）", 17, t["label"], 600, "middle", bg=t["cell"]))
+    b.append(f'<rect x="{w-104}" y="{sy+26}" width="80" height="44" rx="22" fill="{t["accent"]}"/>')
+    b.append(T(w - 64, sy + 54, "保存", 17, "#FFFFFF", 600, "middle", bg=t["accent"]))
+    b.append(f'<rect x="24" y="{sy+90}" width="{w-48}" height="120" rx="16" fill="{t["bg"]}"/>')
+    b.append(T(40, sy + 124, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=t["bg"]))
+    b.append(f'<rect x="250" y="{sy+108}" width="2" height="22" fill="{t["accent"]}"/>')
+    b.append(T(w - 40, sy + 196, "13 / 60文字", 13, t["sec"], 400, "end", op=t["sec_op"], bg=t["bg"]))
+    ky = h - 300
+    kb = "#D1D3D9" if theme == "light" else "#2C2C2E"
+    b.append(f'<rect x="0" y="{ky}" width="{w}" height="300" fill="{kb}"/>')
+    b.append(T(w / 2, ky + 150, "（システムのキーボード）", 15, t["label"], 400, "middle", bg=kb))
+    return svg(w, h, t["bg"], "".join(b))
+
+
+def duo_system_strip(w, h, t):
+    """iPhone Duo: the status bar and Dynamic Island sit on the side of the display.
+    Exact positions are not published; this right-edge strip is an approximation."""
+    x = w - 44
+    return (f'<rect x="{x+15}" y="20" width="14" height="44" rx="7" fill="#000"/>'
+            + T(x + 22, 88, "9:41", 13, t["label"], 600, "middle"))
+
+
+def duo_side_buttons(w, t, y0=110):
+    """Standard bar buttons laid out vertically under the side status bar (iOS 27.1 SDK)."""
+    x = w - 44 + 22
+    return (f'<circle cx="{x}" cy="{y0}" r="20" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
+            f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(x - 12, y0 - 12, t["accent"])
+            + f'<circle cx="{x}" cy="{y0+50}" r="20" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
+            f'stroke="{t["glass_stroke"]}"/><g fill="none" stroke="{t["label"]}" stroke-width="2">'
+            f'<circle cx="{x-2}" cy="{y0+48}" r="7"/><path d="M{x+3} {y0+53}l5 5"/></g>')
+
+
+def duo_outer(theme):
+    t = THEMES[theme]
+    w, h = 466, 678
+    cw = w - 44  # content width left of the side strip
+    b = [duo_system_strip(w, h, t), duo_side_buttons(w, t)]
+    b.append(T(20, 64, "日記", 34, t["label"], 700))
+    b.append(T(20, 94, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    y = 116
+    rows = ENTRIES[:4]
+    b.append(f'<rect x="16" y="{y}" width="{cw-28}" height="{len(rows)*76}" rx="26" fill="{t["cell"]}"/>')
+    for i, (d, s) in enumerate(rows):
+        cy = y + i * 76
+        b.append(T(36, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+        b.append(T(36, cy + 56, s[:19] + ("…" if len(s) > 19 else ""), 17, t["label"], 400, bg=t["cell"]))
+        if i < len(rows) - 1:
+            b.append(f'<rect x="36" y="{cy+75.5}" width="{cw-64}" height="0.5" fill="{t["sep"]}"/>')
+    b.append(tab_bar(cw, h + 12, t))
+    return svg(w, h, t["bg"], "".join(b))
+
+
+def duo_inner(theme):
+    t = THEMES[theme]
+    w, h = 669, 951
+    cw = w - 44
+    sw = 196
+    b = [duo_system_strip(w, h, t), duo_side_buttons(w, t)]
+    # Sidebar (tabs placed as a sidebar on the inner display).
+    b.append(f'<rect x="10" y="10" width="{sw}" height="{h-20}" rx="24" fill="{t["cell"]}" '
+             f'stroke="{t["glass_stroke"]}"/>')
+    b.append(T(26, 56, "ひとこと日記", 20, t["label"], 700, bg=t["cell"]))
+    items = [("book", "すべて", True), ("cal", "カレンダー", False), ("gear", "設定", False)]
+    for i, (sym, lab, on) in enumerate(items):
+        y = 80 + i * 50
+        col = t["accent"] if on else t["label"]
+        if on:
+            b.append(f'<rect x="20" y="{y}" width="{sw-20}" height="44" rx="12" fill="{t["accent"]}" '
+                     f'fill-opacity="0.14"/>')
+        b.append(symbol(sym, 44, y + 22, col))
+        b.append(T(66, y + 28, lab, 17, col, 600 if on else 400, bg=t["cell"]))
+    b.append(T(26, h - 34, "残り 23 件", 13, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    # Detail beside the list collapsed into the sidebar width budget: list on top, detail below.
+    lx = sw + 28
+    lw = cw - lx - 8
+    b.append(T(lx, 60, "すべての日記", 28, t["label"], 700))
+    rows = ENTRIES[:3]
+    b.append(f'<rect x="{lx}" y="80" width="{lw}" height="{len(rows)*76}" rx="24" fill="{t["cell"]}"/>')
+    for i, (d, s) in enumerate(rows):
+        cy = 80 + i * 76
+        if i == 0:
+            b.append(f'<rect x="{lx+8}" y="{cy+6}" width="{lw-16}" height="64" rx="18" fill="{t["accent"]}" '
+                     f'fill-opacity="0.14"/>')
+        b.append(T(lx + 20, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+        b.append(T(lx + 20, cy + 56, s[:20] + ("…" if len(s) > 20 else ""), 17, t["label"], 400, bg=t["cell"]))
+    dy = 80 + len(rows) * 76 + 36
+    d, s = ENTRIES[0]
+    b.append(T(lx, dy, d, 22, t["label"], 700))
+    b.append(f'<rect x="{lx}" y="{dy+18}" width="{lw}" height="150" rx="24" fill="{t["cell"]}"/>')
+    b.append(T(lx + 20, dy + 60, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=t["cell"]))
+    b.append(T(lx + 20, dy + 88, "帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
+    b.append(T(lx + 20, dy + 144, "晴れ・午後 5:12 に記録", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    return svg(w, h, t["bg"], "".join(b))
+
+
 files = {
     "iphone-S-01-light.svg": iphone_list("light"),
     "iphone-S-01-dark.svg": iphone_list("dark"),
@@ -242,6 +415,17 @@ files = {
     "mac-S-01-light.svg": mac("light"),
     "mac-S-01-dark.svg": mac("dark"),
     "watch-ultra-S-01.svg": watch(),
+    "iphone-duo-outer-S-01-light.svg": duo_outer("light"),
+    "iphone-duo-outer-S-01-dark.svg": duo_outer("dark"),
+    "iphone-duo-inner-S-01-light.svg": duo_inner("light"),
+    "iphone-duo-inner-S-01-dark.svg": duo_inner("dark"),
+    "iphone-S-03-light.svg": iphone_compose("light"),
+    "iphone-S-03-dark.svg": iphone_compose("dark"),
+    "iphone-S-01-empty-light.svg": iphone_empty("light"),
+    "iphone-S-01-empty-dark.svg": iphone_empty("dark"),
+    "iphone-S-01-light-ax5.svg": iphone_ax5("light"),
+    "ipad-narrow-S-01-light.svg": ipad_narrow("light"),
+    "ipad-narrow-S-01-dark.svg": ipad_narrow("dark"),
 }
 for name, content in files.items():
     (OUT / name).write_text(content, encoding="utf-8")

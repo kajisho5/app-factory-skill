@@ -14,7 +14,16 @@ CANVASES = {
     "mac":              (1440, 900, 2, "macos"),
     "watch-ultra":      (211, 257, 2, "watchos"),
     "watch":            (198, 242, 2, "watchos"),
-    "iphone-duo":       (1600, 1000, 2, "ios"),
+    # iPhone Duo (foldable, 2026). Pixel sizes are the App Store screenshot sizes;
+    # the @3x scale is an assumption (Apple has not published point sizes).
+    "iphone-duo-outer":           (466, 678, 3, "ios"),
+    "iphone-duo-outer-landscape": (678, 466, 3, "ios"),
+    "iphone-duo-inner":           (669, 951, 3, "ios"),
+    "iphone-duo-inner-landscape": (951, 669, 3, "ios"),
+    # Two framed phones side by side for marketing images (made by frame.py pair).
+    "pair":                       (1600, 1000, 2, "ios"),
+    # Not a screenshot size: an example of a narrow iPad window (windows resize freely).
+    "ipad-narrow":      (600, 1032, 2, "ios"),
 }
 
 # Minimum text size in pt (HIG Accessibility).

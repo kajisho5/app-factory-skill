@@ -8,6 +8,7 @@ Checks per SVG:
     Background = nearest ancestor's data-bg, else the root data-bg, else the first
     full-canvas <rect> fill. Put data-bg="#RRGGBB" on a <g> or <text> drawn over
     buttons, cards or images so the check uses the right color.
+  - text that probably runs off the canvas (rough width estimate; WARN only)
   - every *-light.svg has a *-dark.svg (and vice versa)
   - a PNG exists next to it, is not older than the SVG, and has no alpha channel
 
@@ -108,7 +109,7 @@ def check_svg(path: Path, errors, warns):
     def walk(el, inh):
         s = style_dict(el)
         cur = dict(inh)
-        for k in ("fill", "font-size", "font-weight", "opacity", "fill-opacity"):
+        for k in ("fill", "font-size", "font-weight", "opacity", "fill-opacity", "text-anchor"):
             if k in s:
                 cur[k] = s[k]
         if "data-bg" in s:
@@ -117,6 +118,14 @@ def check_svg(path: Path, errors, warns):
             text = "".join(el.itertext()).strip()[:24]
             fs = cur.get("font-size")
             size = float(re.sub(r"[a-z]+$", "", fs)) if fs else None
+            if size is not None and local(el.tag) == "text" and name and el.get("x") and "transform" not in s:
+                full = "".join(el.itertext()).strip()
+                est = sum(size if ord(ch) > 0x2E7F else size * 0.56 for ch in full)  # rough width
+                x = float(re.sub(r"[a-z%]+$", "", el.get("x").split()[0]))
+                anchor = cur.get("text-anchor", s.get("text-anchor", "start"))
+                left = x - est if anchor == "end" else x - est / 2 if anchor == "middle" else x
+                if left < -1 or left + est > w + 1:
+                    warns.append(f"{path}: text '{text}' may run off the canvas (estimated width {est:.0f}pt)")
             if size is not None and size < min_pt:
                 errors.append(f"{path}: text '{text}' is {size:g}pt (< {min_pt}pt minimum for {platform})")
             fg = parse_color(cur.get("fill", "#000000"))

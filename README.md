@@ -2,7 +2,9 @@
 
 Appleの Human Interface Guidelines（HIG）に沿って、**iPhone / iPhone Duo / iPad / Mac / Apple Watch** のアプリ画面をデザインするAgent Skillです。アプリのアイデアや仕様を渡すと、デザイン設計書と、ライト／ダーク両方のSVGモック＋PNGプレビューを作ります。
 
-![iPhone Duo の完成例（架空のアプリ「ひとこと日記」）](examples/hitokoto/mocks/iphone-duo-S-01-S-02-light.png)
+![2台並びの掲載用画像の完成例（架空のアプリ「ひとこと日記」）](examples/hitokoto/mocks/pair-S-01-S-02-light.png)
+
+![iPhone Duo（折りたたみ）の内側の完成例](examples/hitokoto/mocks/framed-iphone-duo-inner-S-01-light.png)
 
 - **設計書**： 画面一覧、プラットフォーム別のナビゲーション、全画面の状態（空・エラー・権限拒否・無料版の上限）、色と文字のトークン、SF Symbols、アクセシビリティ
 - **モック**： キャンバスは App Store のスクリーンショット寸法に合わせてあり、PNGはそのまま掲載用に使える（透過なし）
@@ -17,7 +19,7 @@ Appleの Human Interface Guidelines（HIG）に沿って、**iPhone / iPhone Duo
 ```bash
 git clone https://github.com/kajisho5/hig-design-skill ~/.claude/skills/hig-design-skill
 git clone https://github.com/kajisho5/design-check-skill ~/.claude/skills/design-check-skill
-pip install cairosvg pillow
+pip install -r ~/.claude/skills/hig-design-skill/requirements.txt
 ```
 
 **Claude Code（プロジェクト用）** — リポジトリ直下で：
@@ -37,7 +39,7 @@ PNGの書き出しには和文の書体が必要です（Macはヒラギノで�
 
 - 「家計簿アプリの画面を iPhone と iPad でデザインして」
 - 「この仕様のアプリを HIG に沿ってモックにして。Mac と Watch も」
-- 「App Store に載せるスクショ用のモックを作って。iPhone Duo も」
+- 「App Store に載せるスクショ用のモックを作って。iPhone Duo（折りたたみ）の外側と内側も」
 
 できあがるもの：
 
@@ -46,7 +48,8 @@ design/
   design-spec.md
   mocks/
     iphone-S-01-light.svg / .png   … 各画面 × ライト／ダーク
-    iphone-duo-S-01-S-02-light.png … 2台並びの提示用
+    iphone-duo-outer-S-01-light.png … iPhone Duo 外側（閉じた状態）
+    iphone-duo-inner-S-01-light.png … iPhone Duo 内側（開いた状態）
     ipad-landscape-S-01-light.png
     mac-S-01-light.png
     watch-ultra-S-01.png
@@ -55,7 +58,8 @@ design/
 スクリプトは単体でも使えます。
 
 ```bash
-python3 scripts/frame.py duo left.svg right.svg -o duo.svg --caption-left "見出し" --caption-right "見出し"
+python3 scripts/frame.py duo-inner design/mocks/iphone-duo-inner-S-01-light.svg -o design/mocks/framed-iphone-duo-inner-S-01-light.svg
+python3 scripts/frame.py pair left.svg right.svg -o pair-S-01-S-02-light.svg --caption-left "見出し" --caption-right "見出し"
 python3 scripts/export_png.py design/mocks
 python3 scripts/check_mocks.py design/mocks
 ```
@@ -77,8 +81,10 @@ python3 scripts/check_mocks.py design/mocks
 - `SKILL.md` — ワークフローとデザインの原則
 - `references/hig-specs.md` — キャンバス寸法、Text Styles、コントロール、コントラスト、色の近似値、ナビゲーションの型（出典つき）
 - `templates/design-spec.md` — 設計書の雛形
-- `scripts/` — `devices.py`（端末と寸法）、`frame.py`（端末フレーム・iPhone Duo）、`export_png.py`（PNG書き出し）、`check_mocks.py`（機械チェック）
-- `examples/hitokoto/` — 完成例（架空のアプリ「ひとこと日記」）
+- `scripts/` — `devices.py`（端末と寸法）、`frame.py`（端末フレーム・2台並び）、`export_png.py`（PNG書き出し）、`check_mocks.py`（機械チェック）
+- `examples/hitokoto/` — 完成例（架空のアプリ「ひとこと日記」）。`bash examples/hitokoto/make.sh` で全モックを作り直して検査できる
+- `requirements.txt` — スクリプトの依存（cairosvg、pillow）
+- `.github/workflows/check.yml` — 完成例の再生成・検査と、SKILL.md の形式チェックを GitHub Actions で実行
 - `LICENSE` — MIT License
 
 ## よくある質問
@@ -89,8 +95,8 @@ A. キャンバスは App Store Connect のスクリーンショット仕様（�
 **Q. 色の値は正確ですか？**
 A. モックに書く色は近似値です。HIGは色見本を画像で載せているため、正確な値は Apple Design Resources で確認してください。実装ではシステムカラーを使う前提で、設計書にはシステムカラーの名前を書きます。
 
-**Q. 「iPhone Duo」とは？**
-A. iPhone を2台並べた提示用の画像です（Appleの用語ではありません）。一覧と詳細、操作前と操作後のように、2画面の役割が分かる組み合わせで作ります。
+**Q. iPhone Duo には対応していますか？**
+A. はい。2026年9月発表の折りたたみ iPhone で、外側（5.4インチ）と内側（7.6インチ）の両方のモックを作ります。キャンバスは App Store のスクリーンショット仕様（外側 1398 × 2034 px、内側 2007 × 2853 px）に合わせています。pt寸法・Split View の幅・Dynamic Island の正確な位置はAppleが公開していないため、推定値・近似として扱います。iPhone Duo のスクリーンショットは現時点では任意ですが、2027年4月以降は iOS 27.1 SDK 以降でビルドしたアプリで必須になります。
 
 **Q. design-check-skill は必須ですか？**
 A. 推奨です。無い環境では簡易チェックで代え、設計書に「監査は未実施」と書きます。
@@ -100,6 +106,7 @@ A. 推奨です。無い環境では簡易チェックで代え、設計書に�
 - [Apple Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines)
 - [Screenshot specifications（App Store Connect）](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications)
 - [Apple Design Resources](https://developer.apple.com/design/resources/)
+- [Prepare your app for iPhone Duo（Apple Developer Tech Talk）](https://developer.apple.com/videos/play/tech-talks/111461/)
 
 ## 関連プロジェクト
 
