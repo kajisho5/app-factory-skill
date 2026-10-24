@@ -38,6 +38,25 @@ def T(x, y, s, size, fill, weight=400, anchor="start", op=None, bg=None, font=No
             f'fill="{fill}" text-anchor="{anchor}"{o}{b}>{escape(s)}</text>')
 
 
+def mix(fg, bg, a):
+    """Composite colour of fg at opacity a over bg (for data-bg on tinted rows)."""
+    f = [int(fg[i:i + 2], 16) for i in (1, 3, 5)]
+    g = [int(bg[i:i + 2], 16) for i in (1, 3, 5)]
+    return "#" + "".join(f"{round(x * a + y * (1 - a)):02X}" for x, y in zip(f, g))
+
+
+def chevron(x, cy, c):
+    # Disclosure indicator (chevron.forward) for rows that drill into a detail view.
+    return (f'<path d="M{x} {cy-6}l6 6-6 6" fill="none" stroke="{c}" stroke-opacity="0.35" stroke-width="2" '
+            f'stroke-linecap="round" stroke-linejoin="round"/>')
+
+
+def search_btn(cx, cy, t, fill=None):
+    return (f'<circle cx="{cx}" cy="{cy}" r="22" fill="{fill or t["glass"]}" fill-opacity="{1 if fill else t["glass_op"]}" '
+            f'stroke="{t["glass_stroke"]}"/><g fill="none" stroke="{t["label"]}" stroke-width="2">'
+            f'<circle cx="{cx-2}" cy="{cy-2}" r="7"/><path d="M{cx+3} {cy+3}l5 5"/></g>')
+
+
 def svg(w, h, bg, body):
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
             f'data-bg="{bg}"><rect width="100%" height="100%" fill="{bg}"/>{body}</svg>\n')
@@ -109,6 +128,7 @@ def iphone_list(theme):
     # Toolbar button (add) top-right, 44x44 hit area.
     b.append(f'<circle cx="{w-38}" cy="84" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
              f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(w - 50, 72, t["accent"]))
+    b.append(search_btn(w - 90, 84, t))
     b.append(T(20, 150, "日記", 34, t["label"], 700))
     b.append(T(20, 180, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     y = 204
@@ -116,7 +136,8 @@ def iphone_list(theme):
     for i, (d, s) in enumerate(ENTRIES):
         cy = y + i * 76
         b.append(T(36, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-        b.append(T(36, cy + 56, s[:19] + ("…" if len(s) > 19 else ""), 17, t["label"], 400, bg=t["cell"]))
+        b.append(T(36, cy + 56, s[:18] + ("…" if len(s) > 18 else ""), 17, t["label"], 400, bg=t["cell"]))
+        b.append(chevron(w - 44, cy + 38, t["label"]))
         if i < len(ENTRIES) - 1:
             b.append(f'<rect x="36" y="{cy+75.5}" width="{w-52}" height="0.5" fill="{t["sep"]}"/>')
     b.append(tab_bar(w, h, t))
@@ -157,11 +178,11 @@ def ipad(theme):
     for i, (sym, lab, on) in enumerate(items):
         y = 132 + i * 52
         col = t["accent"] if on else t["label"]
+        rowbg = mix(t["accent"], t["cell"], 0.14) if on else t["cell"]
         if on:
-            b.append(f'<rect x="24" y="{y}" width="{sw-24}" height="44" rx="12" fill="{t["accent"]}" '
-                     f'fill-opacity="0.14"/>')
+            b.append(f'<rect x="24" y="{y}" width="{sw-24}" height="44" rx="12" fill="{rowbg}"/>')
         b.append(symbol(sym, 52, y + 22, col))
-        b.append(T(76, y + 28, lab, 17, col, 600 if on else 400, bg=t["cell"]))
+        b.append(T(76, y + 28, lab, 17, t["label"], 600 if on else 400, bg=rowbg))
     b.append(T(36, h - 40, "残り 23 件（無料版は 30 件まで）", 13, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     # List column + detail.
     lx = sw + 36
@@ -170,14 +191,20 @@ def ipad(theme):
     b.append(f'<rect x="{lx}" y="128" width="{lw}" height="{len(ENTRIES)*76}" rx="26" fill="{t["cell"]}"/>')
     for i, (d, s) in enumerate(ENTRIES):
         cy = 128 + i * 76
+        rowbg = mix(t["accent"], t["cell"], 0.14) if i == 0 else t["cell"]
         if i == 0:
-            b.append(f'<rect x="{lx+8}" y="{cy+6}" width="{lw-16}" height="64" rx="18" fill="{t["accent"]}" '
-                     f'fill-opacity="0.14"/>')
-        b.append(T(lx + 20, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-        b.append(T(lx + 20, cy + 56, s[:17] + ("…" if len(s) > 17 else ""), 17, t["label"], 400, bg=t["cell"]))
+            b.append(f'<rect x="{lx+8}" y="{cy+6}" width="{lw-16}" height="64" rx="18" fill="{rowbg}"/>')
+        b.append(T(lx + 20, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=rowbg))
+        b.append(T(lx + 20, cy + 56, s[:17] + ("…" if len(s) > 17 else ""), 17, t["label"], 400, bg=rowbg))
     dx = lx + lw + 32
     b.append(f'<circle cx="{w-50}" cy="76" r="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
              + symbol_pencil(w - 62, 64, t["accent"]))
+    # Toolbar search field (⌘F) left of the new-entry button.
+    sx = w - 330
+    b.append(f'<rect x="{sx}" y="54" width="250" height="44" rx="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
+             f'<g fill="none" stroke="{t["sec"]}" stroke-width="2"><circle cx="{sx+24}" cy="74" r="7"/>'
+             f'<path d="M{sx+29} 79l5 5"/></g>')
+    b.append(T(sx + 44, 82, "検索", 17, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     d, s = ENTRIES[0]
     b.append(T(dx, 104, d, 28, t["label"], 700))
     b.append(f'<rect x="{dx}" y="128" width="{w-dx-28}" height="180" rx="26" fill="{t["cell"]}"/>')
@@ -207,13 +234,13 @@ def mac(theme):
     items = [("book", "すべての日記", True), ("cal", "カレンダー", False)]
     for i, (sym, lab, on) in enumerate(items):
         y = wy + 64 + i * 32
-        col = t["accent"] if on else t["label"]
+        rowbg = mix(t["accent"], t["side"], 0.16) if on else t["side"]
         if on:
-            b.append(f'<rect x="{wx+16}" y="{y}" width="{sw-16}" height="28" rx="6" fill="{t["accent"]}" '
-                     f'fill-opacity="0.16"/>')
-        b.append(T(wx + 32, y + 19, lab, 13, col, 600 if on else 400, bg=t["side"]))
+            b.append(f'<rect x="{wx+16}" y="{y}" width="{sw-16}" height="28" rx="6" fill="{rowbg}"/>')
+        b.append(T(wx + 32, y + 19, lab, 13, t["label"], 600 if on else 400, bg=rowbg))
     lx = wx + sw + 24
-    b.append(T(lx, wy + 34, "すべての日記", 15, t["label"], 700, bg=t["win"]))
+    b.append(T(lx, wy + 26, "すべての日記", 13, t["label"], 700, bg=t["win"]))
+    b.append(T(lx, wy + 43, "残り 23 件（無料版は 30 件まで）", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
     b.append(f'<rect x="{wx+ww-44}" y="{wy+14}" width="28" height="28" rx="6" fill="{t["bar"]}"/>'
              + symbol_pencil(wx + ww - 42, wy + 16, t["accent"], 1.0))
     # Toolbar search field (⌘F), left of the new-entry button.
@@ -226,11 +253,11 @@ def mac(theme):
     lw = 320
     for i, (d, s) in enumerate(ENTRIES):
         y = wy + 64 + i * 56
+        rowbg = mix(t["accent"], t["win"], 0.16) if i == 0 else t["win"]
         if i == 0:
-            b.append(f'<rect x="{lx-8}" y="{y}" width="{lw}" height="52" rx="8" fill="{t["accent"]}" '
-                     f'fill-opacity="0.16"/>')
-        b.append(T(lx, y + 20, d, 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
-        b.append(T(lx, y + 40, s[:20] + ("…" if len(s) > 20 else ""), 13, t["label"], 400, bg=t["win"]))
+            b.append(f'<rect x="{lx-8}" y="{y}" width="{lw}" height="52" rx="8" fill="{rowbg}"/>')
+        b.append(T(lx, y + 20, d, 11, t["sec"], 400, op=t["sec_op"], bg=rowbg))
+        b.append(T(lx, y + 40, s[:20] + ("…" if len(s) > 20 else ""), 13, t["label"], 400, bg=rowbg))
     dx = lx + lw + 24
     b.append(f'<rect x="{dx-12}" y="{wy+52}" width="0.5" height="{wh-60}" fill="{t["sep"]}"/>')
     d, s = ENTRIES[0]
@@ -291,7 +318,7 @@ def iphone_empty(theme):
 
 def iphone_ax5(theme):
     """Largest accessibility text size (AX5): Large Title 60pt, Subhead 49pt, Body 53pt.
-    Rows stack and wrap instead of truncating; the tab bar keeps its own system size."""
+    Rows stack and wrap; the body shows up to 4 lines (the full text is on S-02); the bars keep their size."""
     t = THEMES[theme]
     w, h = 402, 874
     b = [status_bar(w, t)]
@@ -300,7 +327,7 @@ def iphone_ax5(theme):
     b.append(T(20, 176, "日記", 60, t["label"], 700))
     b.append(f'<rect x="16" y="206" width="{w-32}" height="490" rx="26" fill="{t["cell"]}"/>')
     lines = [("10月24日", 49, "sec"), ("（土）", 49, "sec"), ("公園の", 53, "label"),
-             ("銀杏が色づ", 53, "label"), ("いてきた。", 53, "label"), ("帰りに…", 53, "label")]
+             ("銀杏が色づ", 53, "label"), ("いてきた。", 53, "label"), ("帰りにパ…", 53, "label")]
     y = 270
     for text, size, kind in lines:
         if kind == "sec":
@@ -326,32 +353,32 @@ def ipad_narrow(theme):
              f'<path d="M117 70v20"/></g>')
     b.append(f'<circle cx="{w-44}" cy="80" r="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
              + symbol_pencil(w - 56, 68, t["accent"]))
+    b.append(search_btn(w - 96, 80, t, fill=t["cell"]))  # search folds into a button in a narrow window
     b.append(T(24, 150, "すべての日記", 34, t["label"], 700))
     b.append(T(24, 180, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     b.append(f'<rect x="20" y="204" width="{w-40}" height="{len(ENTRIES)*76}" rx="26" fill="{t["cell"]}"/>')
     for i, (d, s) in enumerate(ENTRIES):
         cy = 204 + i * 76
         b.append(T(40, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-        b.append(T(40, cy + 56, s[:28] + ("…" if len(s) > 28 else ""), 17, t["label"], 400, bg=t["cell"]))
+        b.append(T(40, cy + 56, s[:27] + ("…" if len(s) > 27 else ""), 17, t["label"], 400, bg=t["cell"]))
+        b.append(chevron(w - 52, cy + 38, t["label"]))
         if i < len(ENTRIES) - 1:
             b.append(f'<rect x="40" y="{cy+75.5}" width="{w-60}" height="0.5" fill="{t["sep"]}"/>')
     return svg(w, h, t["bg"], "".join(b))
 
 
 def iphone_compose(theme):
-    """S-03: new entry in a sheet (medium detent, grabber, xmark Cancel / filled checkmark Save).
+    """S-03: new entry in a full-height sheet (no grabber; xmark Cancel / filled checkmark Save).
     The input sits above the keyboard so it is never covered (C-16)."""
     t = THEMES[theme]
     w, h = 402, 874
     dim = "#000000"
     b = [status_bar(w, t)]
-    b.append(T(20, 150, "日記", 34, t["label"], 700))
     b.append(f'<rect width="{w}" height="{h}" fill="{dim}" fill-opacity="{0.25 if theme == "light" else 0.5}"/>')
-    sy = 300
+    sy = 56  # compose sheets use full height only (no medium detent, no grabber)
     sheet = t["cell"] if theme == "light" else "#1C1C1E"   # dark: elevated surface
     field = t["bg"] if theme == "light" else "#2C2C2E"     # dark: elevated secondary
-    b.append(f'<rect x="8" y="{sy}" width="{w-16}" height="{h-sy+40}" rx="38" fill="{sheet}"/>')
-    b.append(f'<rect x="{w/2-18}" y="{sy+8}" width="36" height="5" rx="2.5" fill="{t["sep"]}"/>')
+    b.append(f'<path d="M0 {sy+38}a38 38 0 0 1 38 -38h{w-76}a38 38 0 0 1 38 38v{h-sy-38}h-{w}z" fill="{sheet}"/>')
     # iOS 26 sheet buttons are round symbol buttons: xmark (Cancel) leading, filled checkmark (Done) trailing
     cx, cy = 46, sy + 48
     b.append(f'<g aria-label="キャンセル"><circle cx="{cx}" cy="{cy}" r="22" fill="{field}"/>'
@@ -417,7 +444,8 @@ def duo_outer(theme):
     for i, (d, s) in enumerate(rows):
         cy = y + i * 76
         b.append(T(36, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-        b.append(T(36, cy + 56, s[:19] + ("…" if len(s) > 19 else ""), 17, t["label"], 400, bg=t["cell"]))
+        b.append(T(36, cy + 56, s[:18] + ("…" if len(s) > 18 else ""), 17, t["label"], 400, bg=t["cell"]))
+        b.append(chevron(cw - 30, cy + 38, t["label"]))
         if i < len(rows) - 1:
             b.append(f'<rect x="36" y="{cy+75.5}" width="{cw-60}" height="0.5" fill="{t["sep"]}"/>')
     return svg(w, h, t["bg"], "".join(b))
@@ -443,10 +471,9 @@ def duo_inner(theme):
              f'<rect x="{lx+11}" y="70" width="22" height="20" rx="3"/><path d="M{lx+19} 70v20"/></g>')
     b.append(btn(lx + 72, 80) + f'<g fill="none" stroke="{t["label"]}" stroke-width="2">'
              f'<circle cx="{lx+70}" cy="78" r="7"/><path d="M{lx+75} 83l5 5"/></g>')
-    b.append(f'<rect x="{w-140}" y="58" width="124" height="44" rx="22" fill="{t["accent"]}"/>')
-    b.append(T(w - 78, 86, "今日を書く", 17, "#FFFFFF", 600, "middle", bg=t["accent"]))
+    b.append(btn(w - 38, 80) + symbol_pencil(w - 50, 68, t["accent"]))
     b.append(T(lx + 4, 148, "すべての日記", 28, t["label"], 700))
-    b.append(T(lx + 4, 176, "残り 23 件", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(lx + 4, 176, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     # Scrolling list: allowed to cross the fold.
     rows = ENTRIES
     ly = 196
@@ -454,11 +481,11 @@ def duo_inner(theme):
              f'fill="{t["cell"]}"/>')
     for i, (d, s) in enumerate(rows):
         cy = ly + i * 76
+        rowbg = mix(t["accent"], t["cell"], 0.14) if i == 0 else t["cell"]
         if i == 0:
-            b.append(f'<rect x="{lx+8}" y="{cy+6}" width="{lw-16}" height="64" rx="18" fill="{t["accent"]}" '
-                     f'fill-opacity="0.14"/>')
-        b.append(T(lx + 20, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-        b.append(T(lx + 20, cy + 56, s[:14] + ("…" if len(s) > 14 else ""), 17, t["label"], 400, bg=t["cell"]))
+            b.append(f'<rect x="{lx+8}" y="{cy+6}" width="{lw-16}" height="64" rx="18" fill="{rowbg}"/>')
+        b.append(T(lx + 20, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=rowbg))
+        b.append(T(lx + 20, cy + 56, s[:14] + ("…" if len(s) > 14 else ""), 17, t["label"], 400, bg=rowbg))
     b.append('</g>')
     # Detail: the whole card stays above the fold band.
     d, s = ENTRIES[0]
@@ -468,11 +495,6 @@ def duo_inner(theme):
     b.append(T(dx + 20, 266, "帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
     b.append(T(dx + 20, 400, "晴れ・午後 5:12 に記録", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     assert 196 + 230 < fold - 12  # keep the card clear of the fold band
-    # Below the fold: a secondary section that starts after the band.
-    b.append(T(dx, 540, "1年前の今日", 20, t["label"], 700))
-    b.append(f'<rect x="{dx}" y="556" width="{dw}" height="96" rx="24" fill="{t["cell"]}"/>')
-    b.append(T(dx + 20, 596, "前年10月24日（架空）", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-    b.append(T(dx + 20, 624, "雨。駅まで歩いた。", 17, t["label"], 400, bg=t["cell"]))
     return svg(w, h, t["bg"], "".join(b))
 
 
@@ -503,20 +525,31 @@ def duo_inner_landscape(theme, folded=False):
         else:
             b.append(f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><circle cx="{cx-2}" cy="{y0-2}" r="7"/>'
                      f'<path d="M{cx+3} {y0+3}l5 5"/></g>')
+    # Tab bar stays on the trailing edge, bottom-aligned (symbols only, as in Apple's figure).
+    th = 3 * 62 + 12
+    ty = h - 24 - th
+    b.append(f'<rect x="{cx-24}" y="{ty}" width="48" height="{th}" rx="24" fill="{t["glass"]}" '
+             f'fill-opacity="{t["glass_op"]}" stroke="{t["glass_stroke"]}"/>')
+    for k, sym in enumerate(("book", "cal", "gear")):
+        ky = ty + 6 + 62 * k + 31
+        if k == 0:
+            b.append(f'<rect x="{cx-20}" y="{ky-27}" width="40" height="54" rx="20" fill="{t["accent"]}" '
+                     f'fill-opacity="0.12"/>')
+        b.append(symbol_filled(sym, cx, ky, t["accent"] if k == 0 else t["label"]))
     # List pane with its own controls at the top of the pane.
     b.append(f'<rect x="8" y="8" width="{lw+16}" height="{h-16}" rx="28" fill="{t["cell"]}"/>')
     b.append(f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><rect x="26" y="26" width="22" height="20" rx="3"/>'
              f'<path d="M34 26v20"/></g>')
     b.append(T(24, 98, "すべての日記", 28, t["label"], 700, bg=t["cell"]))
-    b.append(T(24, 126, "残り 23 件", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(T(24, 126, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     for i, (d, s) in enumerate(ENTRIES):
         cy = 146 + i * 76
+        rowbg = mix(t["accent"], t["cell"], 0.14) if i == 0 else t["cell"]
         if i == 0:
-            b.append(f'<rect x="16" y="{cy+6}" width="{lw}" height="64" rx="18" fill="{t["accent"]}" '
-                     f'fill-opacity="0.14"/>')
+            b.append(f'<rect x="16" y="{cy+6}" width="{lw}" height="64" rx="18" fill="{rowbg}"/>')
         n = 15 if folded else 16
-        b.append(T(32, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-        b.append(T(32, cy + 56, s[:n] + ("…" if len(s) > n else ""), 17, t["label"], 400, bg=t["cell"]))
+        b.append(T(32, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=rowbg))
+        b.append(T(32, cy + 56, s[:n] + ("…" if len(s) > n else ""), 17, t["label"], 400, bg=rowbg))
     # Detail pane.
     d, s = ENTRIES[0]
     b.append(T(dx + 8, 98, d, 28, t["label"], 700))
@@ -550,7 +583,8 @@ files = {
     "iphone-S-03-dark.svg": iphone_compose("dark"),
     "iphone-S-01-empty-light.svg": iphone_empty("light"),
     "iphone-S-01-empty-dark.svg": iphone_empty("dark"),
-    "iphone-S-01-light-ax5.svg": iphone_ax5("light"),
+    "iphone-S-01-ax5-light.svg": iphone_ax5("light"),
+    "iphone-S-01-ax5-dark.svg": iphone_ax5("dark"),
     "ipad-narrow-S-01-light.svg": ipad_narrow("light"),
     "ipad-narrow-S-01-dark.svg": ipad_narrow("dark"),
 }

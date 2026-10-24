@@ -2,9 +2,11 @@
 
 Appleの Human Interface Guidelines（HIG）に沿って、**iPhone / iPhone Duo / iPad / Mac / Apple Watch** のアプリ画面をデザインするAgent Skillです。アプリのアイデアや仕様を渡すと、デザイン設計書と、ライト／ダーク両方のSVGモック＋PNGプレビューを作ります。
 
-![2台並びの掲載用画像の完成例（架空のアプリ「ひとこと日記」）](examples/hitokoto/mocks/pair-S-01-S-02-light.png)
+![2台並びの確認用画像の完成例（架空のアプリ「ひとこと日記」）](examples/hitokoto/mocks/pair-S-01-S-02-light.png)
 
 ![iPhone Duo（折りたたみ）の内側の完成例](examples/hitokoto/mocks/framed-iphone-duo-inner-S-01-light.png)
+
+※ 上の端末の枠はこのスキルの汎用の枠で、社内の設計確認用です。アプリの宣伝など外部に出す画像には、Apple が配布している公式の製品ベゼルを使ってください（`references/hig-specs.md` §15）。
 
 - **設計書**： 画面一覧、プラットフォーム別のナビゲーション、全画面の状態（空・エラー・権限拒否・無料版の上限）、色と文字のトークン、SF Symbols、アクセシビリティ
 - **モック**： キャンバスは App Store のスクリーンショット寸法に合わせてあり、PNGはそのまま掲載用に使える（透過なし）
@@ -55,7 +57,8 @@ design/
   mocks/
     iphone-S-01-light.svg / .png   … 各画面 × ライト／ダーク
     iphone-duo-outer-S-01-light.png … iPhone Duo 外側（閉じた状態）
-    iphone-duo-inner-S-01-light.png … iPhone Duo 内側（開いた状態）
+    iphone-duo-inner-landscape-S-01-light.png … iPhone Duo 内側（開いた状態・横向き）
+    iphone-duo-inner-landscape-S-01-folded-light.png … 半分折った状態
     ipad-landscape-S-01-light.png
     mac-S-01-light.png
     watch-ultra-S-01.png
