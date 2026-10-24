@@ -277,6 +277,21 @@ def ipad(theme):
     return svg(w, h, t["bg"], "".join(b))
 
 
+def mac_toolbar(wx, wy, ww, t, edit_enabled=True):
+    """Mac toolbar shared by all main views: 編集, 今日を書く, search field (⌘F) at the trailing end.
+    28pt controls 16pt apart so their 44pt hit areas do not overlap."""
+    sx = wx + ww - 196
+    ec = t["label"] if edit_enabled else t["sec"]
+    return (f'<rect x="{sx-44}" y="{wy+14}" width="28" height="28" rx="6" fill="{t["bar"]}"/>'
+            + symbol_pencil(sx - 42, wy + 16, t["label"], 1.0)
+            + f'<rect x="{sx-108}" y="{wy+14}" width="48" height="28" rx="6" fill="{t["bar"]}"/>'
+            + T(sx - 84, wy + 33, "編集", 13, ec, 400, "middle", bg=t["bar"])
+            + f'<rect x="{sx}" y="{wy+14}" width="180" height="28" rx="8" fill="{t["bar"]}"/>'
+            f'<g fill="none" stroke="{t["sec"]}" stroke-width="1.6"><circle cx="{sx+16}" cy="{wy+27}" r="5"/>'
+            f'<path d="M{sx+20} {wy+31}l4 4"/></g>'
+            + T(sx + 30, wy + 32, "日記を検索", 13, t["sec"], 400, op=t["sec_op"], bg=t["bar"]))
+
+
 def mac(theme):
     t = THEMES[theme]
     w, h = 1440, 900
@@ -309,16 +324,7 @@ def mac(theme):
     lx = wx + sw + 24
     b.append(T(lx, wy + 26, "すべての日記", 13, t["label"], 700, bg=t["win"]))
     b.append(T(lx, wy + 43, "残り 25件（無料版は 30件まで）", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
-    # Toolbar: 編集, 今日を書く, then the search field at the trailing end (⌘F).
-    sx = wx + ww - 196
-    b.append(f'<rect x="{sx-40}" y="{wy+14}" width="28" height="28" rx="6" fill="{t["bar"]}"/>'
-             + symbol_pencil(sx - 38, wy + 16, t["label"], 1.0))
-    b.append(f'<rect x="{sx-96}" y="{wy+14}" width="48" height="28" rx="6" fill="{t["bar"]}"/>'
-             + T(sx - 72, wy + 33, "編集", 13, t["label"], 400, "middle", bg=t["bar"]))
-    b.append(f'<rect x="{sx}" y="{wy+14}" width="180" height="28" rx="8" fill="{t["bar"]}"/>'
-             f'<g fill="none" stroke="{t["sec"]}" stroke-width="1.6"><circle cx="{sx+16}" cy="{wy+27}" r="5"/>'
-             f'<path d="M{sx+20} {wy+31}l4 4"/></g>')
-    b.append(T(sx + 30, wy + 32, "日記を検索", 13, t["sec"], 400, op=t["sec_op"], bg=t["bar"]))
+    b.append(mac_toolbar(wx, wy, ww, t))
     b.append(f'<rect x="{lx-8}" y="{wy+52}" width="{ww-sw-32}" height="0.5" fill="{t["sep"]}"/>')
     lw = 320
     for i, (d, s) in enumerate(ENTRIES):
@@ -736,6 +742,7 @@ def mac_calendar(theme):
     gx = wx + sw + 40
     b.append(T(gx, wy + 26, "カレンダー", 13, t["label"], 700, bg=t["win"]))
     b.append(T(gx, wy + 43, "残り 25件（無料版は 30件まで）", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
+    b.append(mac_toolbar(wx, wy, ww, t))  # same toolbar as 「すべての日記」 (a day with an entry is selected)
     b.append(f'<rect x="{gx-8}" y="{wy+52}" width="{ww-sw-56}" height="0.5" fill="{t["sep"]}"/>')
     b.append(T(gx, wy + 100, "2026年10月", 22, t["label"], 700, bg=t["win"]))
     detw = 300  # detail column on the right (S-02 for the selected day)
