@@ -372,7 +372,7 @@ def duo_inner(theme):
     b.append(f'<rect x="10" y="10" width="{sw}" height="{h-20}" rx="24" fill="{t["cell"]}" '
              f'stroke="{t["glass_stroke"]}"/>')
     b.append(T(26, 56, "ひとこと日記", 20, t["label"], 700, bg=t["cell"]))
-    items = [("book", "すべて", True), ("cal", "カレンダー", False), ("gear", "設定", False)]
+    items = [("book", "すべての日記", True), ("cal", "カレンダー", False), ("gear", "設定", False)]
     for i, (sym, lab, on) in enumerate(items):
         y = 80 + i * 50
         col = t["accent"] if on else t["label"]
