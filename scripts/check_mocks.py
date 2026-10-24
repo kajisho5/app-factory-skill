@@ -15,6 +15,8 @@ Checks per SVG:
     when partially folded (zero width when fully open). Mark scrolling text/lists with data-fold-ok
   - <style> blocks (their rules are not checked; WARN only - use attributes instead)
   - text inside a semi-transparent rect: data-bg must be the composite colour
+  - (warning) text whose estimated box overlaps other text or touches a small button/marker
+    (mark a floating bar that scrolling content passes under with data-overlap-ok)
   - every *-light.svg has a *-dark.svg (and vice versa), and the dark one really is different
     (not a byte copy, not the same root background)
   - a PNG exists next to it, is not older than the SVG, has no alpha channel and has a color profile
@@ -119,6 +121,8 @@ def check_svg(path: Path, errors, warns):
 
     folded = bool(name and name.startswith("iphone-duo-inner") and "-folded" in path.name)
     tints = []  # filled rects/circles drawn so far: (x, y, w, h, colour, alpha)
+    text_boxes = []   # (x, y, w, h, label) estimated
+    small_shapes = []  # buttons and markers (<= 200 x 60pt): (x, y, w, h)
 
     def num(v):
         try:
@@ -152,12 +156,17 @@ def check_svg(path: Path, errors, warns):
             cur["bg"] = parse_color(s["data-bg"]) or cur["bg"]
         if "data-fold-ok" in s:
             cur["fold_ok"] = True
+        if "data-overlap-ok" in s:
+            cur["overlap_ok"] = True  # e.g. scrolling content passing under a floating bar
         box = shape_box(el, s) if not cur.get("xf") else None
         if box and not (box[2] >= w - 1 and box[3] >= h - 1):
             fc = parse_color(s.get("fill", cur.get("fill")))
             a = float(s.get("fill-opacity", 1)) * float(s.get("opacity", 1))
             if fc:
                 tints.append((*box, fc, a))  # every filled shape, in drawing order
+            if (box[2] <= 200 and box[3] <= 60 and min(box[2], box[3]) >= 4 and local(el.tag) in ("rect", "circle")
+                    and not cur.get("overlap_ok")):
+                small_shapes.append(box)
             if folded and not cur.get("fold_ok"):
                 bx, by, bw, bh = box
                 small = bw <= 60 and bh <= 60
@@ -175,7 +184,7 @@ def check_svg(path: Path, errors, warns):
             size = float(re.sub(r"[a-z]+$", "", fs)) if fs else None
             if size is not None and local(el.tag) == "text" and name and el.get("x") and "transform" not in s:
                 full = "".join(el.itertext()).strip()
-                est = sum(size if ord(ch) > 0x2E7F else size * 0.56 for ch in full)  # rough width
+                est = sum(size if ord(ch) >= 0x2000 else size * 0.56 for ch in full)  # rough width
                 x = float(re.sub(r"[a-z%]+$", "", el.get("x").split()[0]))
                 anchor = cur.get("text-anchor", s.get("text-anchor", "start"))
                 left = x - est if anchor == "end" else x - est / 2 if anchor == "middle" else x
@@ -185,7 +194,7 @@ def check_svg(path: Path, errors, warns):
                     and el.get("x") and el.get("y") and "transform" not in s:
                 # Fold band: horizontal across the middle in portrait, vertical in landscape.
                 full = "".join(el.itertext()).strip()
-                est = sum(size if ord(ch) > 0x2E7F else size * 0.56 for ch in full)
+                est = sum(size if ord(ch) >= 0x2000 else size * 0.56 for ch in full)
                 x = float(re.sub(r"[a-z%]+$", "", el.get("x").split()[0]))
                 y = float(re.sub(r"[a-z%]+$", "", el.get("y").split()[0]))
                 anchor = cur.get("text-anchor", "start")
@@ -203,11 +212,12 @@ def check_svg(path: Path, errors, warns):
             if fg and size and local(el.tag) == "text" and el.get("x") and el.get("y") and not cur.get("xf"):
                 # Text on a translucent tint: data-bg must be the composite colour, not the colour underneath.
                 full = "".join(el.itertext()).strip()
-                est = sum(size if ord(ch) > 0x2E7F else size * 0.56 for ch in full)
+                est = sum(size if ord(ch) >= 0x2000 else size * 0.56 for ch in full)
                 tx, ty = num(el.get("x")), num(el.get("y"))
                 anchor = cur.get("text-anchor", "start")
                 mx = tx - est / 2 if anchor == "end" else tx if anchor == "middle" else tx + est / 2
                 my = ty - size * 0.35
+                text_boxes.append((mx - est / 2, ty - size * 0.85, est, size, full[:16]))
                 under = [tb for tb in tints if tb[0] <= mx <= tb[0] + tb[2] and tb[1] <= my <= tb[1] + tb[3]]
                 if under and under[-1][5] < 1:  # the topmost shape under the text is translucent
                     rx, ry, rw_, rh_, tc, ta = under[-1]
@@ -230,6 +240,21 @@ def check_svg(path: Path, errors, warns):
             walk(child, cur)
 
     walk(root, {"bg": page_bg})
+
+    def overlap(a, b, m=1):
+        return a[0] + m < b[0] + b[2] and b[0] + m < a[0] + a[2] and a[1] + m < b[1] + b[3] and b[1] + m < a[1] + a[3]
+
+    if name and not path.name.startswith(("framed-", "pair-")):
+        for i, a in enumerate(text_boxes):
+            for b in text_boxes[i + 1:]:
+                if overlap(a, b, 2):
+                    warns.append(f"{path}: text '{a[4]}' may overlap text '{b[4]}' (estimated boxes)")
+            for s in small_shapes:
+                inside = (s[0] - 2 <= a[0] and a[0] + a[2] <= s[0] + s[2] + 2
+                          and s[1] - 2 <= a[1] and a[1] + a[3] <= s[1] + s[3] + 2)  # a label on its own button
+                if overlap(a, s, 2) and not inside:
+                    warns.append(f"{path}: text '{a[4]}' may touch a button or marker at ({s[0]:g},{s[1]:g}); "
+                                 f"truncate earlier or move it (estimated width)")
 
     png = path.with_suffix(".png")
     if not png.exists():

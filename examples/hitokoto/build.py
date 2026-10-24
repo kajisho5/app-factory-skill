@@ -65,10 +65,43 @@ def text_btn(x, y, label, t, fill=None, size=17):
             + T(x + tw / 2, y + 28, label, size, t["label"], 400, "middle", bg=f)), tw
 
 
-def more_btn(cx, cy, t, fill=None):
+
+
+def trash_btn(cx, cy, t, fill=None):
+    """Delete (trash) as a plain symbol button; VoiceOver label 「削除」."""
     f = fill or t["glass"]
-    dots = "".join(f'<circle cx="{cx + d}" cy="{cy}" r="2.2" fill="{t["label"]}"/>' for d in (-7, 0, 7))
-    return f'<circle cx="{cx}" cy="{cy}" r="22" fill="{f}" stroke="{t["glass_stroke"]}"/>' + dots
+    c = t["label"]
+    return (f'<g aria-label="削除"><circle cx="{cx}" cy="{cy}" r="22" fill="{f}" stroke="{t["glass_stroke"]}"/>'
+            f'<g fill="none" stroke="{c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+            f'<path d="M{cx-8} {cy-6}h16M{cx-3} {cy-6}v-3h6v3M{cx-6} {cy-6}l1 14h10l1-14"/></g></g>')
+
+
+def sun(cx, cy, c, filled=False):
+    rays = "".join(f'<path d="M{cx + 9 * dx:.1f} {cy + 9 * dy:.1f}l{3 * dx:.1f} {3 * dy:.1f}"/>'
+                   for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (.7, .7), (-.7, .7), (.7, -.7), (-.7, -.7)))
+    body = f'<circle cx="{cx}" cy="{cy}" r="5" fill="{c if filled else "none"}"/>'
+    return f'<g stroke="{c}" stroke-width="1.8" fill="none" stroke-linecap="round">{body}{rays}</g>'
+
+
+def cloud(cx, cy, c, extra=""):
+    g = (f'<path d="M{cx-9} {cy+4}a5 5 0 0 1 1-10a7 7 0 0 1 13 1a5 5 0 0 1 4 9z" fill="none" stroke="{c}" '
+         f'stroke-width="1.8" stroke-linejoin="round"/>')
+    if extra == "rain":
+        g += "".join(f'<path d="M{cx-5+5*k} {cy+8}l-2 5" stroke="{c}" stroke-width="1.8" stroke-linecap="round"/>' for k in range(3))
+    return g
+
+
+def snow(cx, cy, c):
+    return (f'<g stroke="{c}" stroke-width="1.8" stroke-linecap="round"><path d="M{cx} {cy-10}v20M{cx-9} {cy-5}l18 10'
+            f'M{cx-9} {cy+5}l18 -10"/></g>')
+
+
+def weather_line(x, y, t, size, bg):
+    """Weather symbol + text label + time (the label is read; the symbol is decorative)."""
+    s = size / 17  # symbol scaled to the text size
+    cy = y - size * 0.35
+    icon = f'<g transform="translate({x + 12 * s} {cy}) scale({s})">{sun(0, 0, t["sec"])}</g>'
+    return icon + T(x + 30 * s, y, "晴れ・午後 5:12", size, t["sec"], 400, op=t["sec_op"], bg=bg)
 
 
 def svg(w, h, bg, body):
@@ -154,7 +187,7 @@ def iphone_list(theme):
     for i, (d, s) in enumerate(ENTRIES):
         cy = y + i * 76
         b.append(T(36, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-        b.append(T(36, cy + 56, s[:18] + ("…" if len(s) > 18 else ""), 17, t["label"], 400, bg=t["cell"]))
+        b.append(T(36, cy + 56, s[:17] + ("…" if len(s) > 17 else ""), 17, t["label"], 400, bg=t["cell"]))
         b.append(chevron(w - 44, cy + 38, t["label"]))
         if i < len(ENTRIES) - 1:
             b.append(f'<rect x="36" y="{cy+75.5}" width="{w-52}" height="0.5" fill="{t["sep"]}"/>')
@@ -173,12 +206,12 @@ def iphone_detail(theme):
              f'stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>')
     eb, ew = text_btn(w - 22 - 44 - 8 - 66, 62, "編集", t)
     b.append(eb)
-    b.append(more_btn(w - 44, 84, t))
+    b.append(trash_btn(w - 44, 84, t))
     b.append(T(20, 150, d, 28, t["label"], 700))
     b.append(f'<rect x="16" y="176" width="{w-32}" height="170" rx="26" fill="{t["cell"]}"/>')
     b.append(T(36, 220, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=t["cell"]))
     b.append(T(36, 248, "帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
-    b.append(T(36, 318, "晴れ・午後 5:12", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(weather_line(36, 318, t, 15, t["cell"]))
     b.append(tab_bar(w, h, t))
     b.append(f'<rect x="{w/2-70}" y="{h-13}" width="140" height="5" rx="2.5" fill="{t["label"]}"/>')
     return svg(w, h, t["bg"], "".join(b))
@@ -223,15 +256,16 @@ def ipad(theme):
              + symbol_pencil(sx - 46, 64, t["accent"]))
     eb, ew = text_btn(sx - 34 - 22 - 8 - 66, 54, "編集", t, fill=t["cell"])
     b.append(eb)
+    b.append(trash_btn(sx - 34 - 22 - 8 - 66 - 8 - 22, 76, t, fill=t["cell"]))
     b.append(f'<rect x="{sx}" y="54" width="250" height="44" rx="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
              f'<g fill="none" stroke="{t["sec"]}" stroke-width="2"><circle cx="{sx+24}" cy="74" r="7"/>'
              f'<path d="M{sx+29} 79l5 5"/></g>')
     b.append(T(sx + 44, 82, "日記を検索", 17, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     d, s = ENTRIES[0]
-    b.append(T(dx, 104, d, 28, t["label"], 700))
-    b.append(f'<rect x="{dx}" y="128" width="{w-dx-28}" height="180" rx="26" fill="{t["cell"]}"/>')
-    b.append(T(dx + 24, 176, "公園の銀杏が色づいてきた。帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
-    b.append(T(dx + 24, 280, "晴れ・午後 5:12", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(T(dx, 142, d, 28, t["label"], 700))
+    b.append(f'<rect x="{dx}" y="160" width="{w-dx-28}" height="180" rx="26" fill="{t["cell"]}"/>')
+    b.append(T(dx + 24, 208, "公園の銀杏が色づいてきた。帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
+    b.append(weather_line(dx + 24, 312, t, 15, t["cell"]))
     return svg(w, h, t["bg"], "".join(b))
 
 
@@ -253,6 +287,8 @@ def mac(theme):
     b.append(f'<rect x="{wx+8}" y="{wy+8}" width="{sw}" height="{wh-16}" rx="12" fill="{t["side"]}"/>')
     for i, c in enumerate(("#FF5F57", "#FEBC2E", "#28C840")):
         b.append(f'<circle cx="{wx+28+i*20}" cy="{wy+28}" r="6" fill="{c}"/>')
+    b.append(f'<g aria-label="サイドバー" fill="none" stroke="{t["label"]}" stroke-width="1.5"><rect x="{wx+sw-30}" y="{wy+20}" width="18" height="16" rx="3"/>'
+             f'<path d="M{wx+sw-24} {wy+20}v16"/></g>')
     items = [("book", "すべての日記", True), ("cal", "カレンダー", False)]
     for i, (sym, lab, on) in enumerate(items):
         y = wy + 64 + i * 32
@@ -288,7 +324,7 @@ def mac(theme):
     d, s = ENTRIES[0]
     b.append(T(dx, wy + 96, d, 22, t["label"], 700, bg=t["win"]))
     b.append(T(dx, wy + 136, s, 13, t["label"], 400, bg=t["win"]))
-    b.append(T(dx, wy + 166, "晴れ・午後 5:12", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
+    b.append(weather_line(dx, wy + 166, t, 11, t["win"]))
     return svg(w, h, t["desk"], "".join(b))
 
 
@@ -304,7 +340,9 @@ def watch():
          T(22, 128, "色づいてきた。帰…", 17, "#FFFFFF", 400, bg="#1C1C1E", **W),
          T(22, 158, "午後 5:12", 14, "#EBEBF5", 400, op=0.6, bg="#1C1C1E", **W),
          f'<rect x="10" y="186" width="{w-20}" height="50" rx="25" fill="#0091FF"/>',
-         T(w / 2, 217, "音声で書く", 17, "#FFFFFF", 600, "middle", bg="#0091FF", **W)]
+         '<g fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"><rect x="34" y="200" width="9" height="15" rx="4.5"/>'
+         '<path d="M30 210a8.5 8.5 0 0 0 17 0M38.5 219v3"/></g>',
+         T(w / 2 + 12, 217, "音声で書く", 17, "#FFFFFF", 600, "middle", bg="#0091FF", **W)]
     return svg(w, h, "#000000", "".join(b))
 
 
@@ -365,7 +403,7 @@ def iphone_ax5(theme):
         else:
             b.append(T(36, y, text, size, t["label"], 400, bg=t["cell"]))
         y += 70
-    b.append(tab_bar(w, h, t))
+    b.append('<g data-overlap-ok="1">' + tab_bar(w, h, t) + '</g>')  # the list scrolls under the bar
     b.append(f'<rect x="{w/2-70}" y="{h-13}" width="140" height="5" rx="2.5" fill="{t["label"]}"/>')
     return svg(w, h, t["bg"], "".join(b))
 
@@ -422,6 +460,15 @@ def iphone_compose(theme):
     b.append(T(40, sy + 124, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=field))
     b.append(f'<rect x="250" y="{sy+108}" width="2" height="22" fill="{t["accent"]}"/>')
     b.append(T(w - 40, sy + 196, "13 / 60文字", 13, t["sec"], 400, "end", op=t["sec_op"], bg=field))
+    # Weather (optional): four symbol buttons; the selected one is filled and has a round tint.
+    b.append(T(24, sy + 250, "天気", 15, t["sec"], 400, op=t["sec_op"], bg=sheet))
+    wy = sy + 290
+    sel = mix(t["accent"], sheet, 0.18)
+    for k in range(4):
+        cxk = 46 + k * 60
+        b.append(f'<circle cx="{cxk}" cy="{wy}" r="22" fill="{sel if k == 0 else field}"/>')
+        col = t["accent"] if k == 0 else t["label"]
+        b.append([sun(cxk, wy, col, True), cloud(cxk, wy, col), cloud(cxk, wy - 3, col, "rain"), snow(cxk, wy, col)][k])
     ky = h - 300
     kb = "#D1D3D9" if theme == "light" else "#2C2C2E"
     b.append(f'<rect x="0" y="{ky}" width="{w}" height="300" fill="{kb}"/>')
@@ -470,7 +517,7 @@ def duo_outer(theme):
     for i, (d, s) in enumerate(rows):
         cy = y + i * 76
         b.append(T(36, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-        b.append(T(36, cy + 56, s[:18] + ("…" if len(s) > 18 else ""), 17, t["label"], 400, bg=t["cell"]))
+        b.append(T(36, cy + 56, s[:17] + ("…" if len(s) > 17 else ""), 17, t["label"], 400, bg=t["cell"]))
         b.append(chevron(cw - 30, cy + 38, t["label"]))
         if i < len(rows) - 1:
             b.append(f'<rect x="36" y="{cy+75.5}" width="{cw-60}" height="0.5" fill="{t["sep"]}"/>')
@@ -496,6 +543,7 @@ def duo_inner(theme):
     b.append(btn(w - 38, 80) + symbol_pencil(w - 50, 68, t["accent"]))
     eb, ew = text_btn(w - 38 - 22 - 8 - 66, 58, "編集", t)
     b.append(eb)
+    b.append(trash_btn(w - 38 - 22 - 8 - 66 - 8 - 22, 80, t))
     b.append(T(lx + 4, 148, "日記", 28, t["label"], 700))
     b.append(T(lx + 4, 176, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     # Scrolling list: allowed to cross the fold.
@@ -517,7 +565,7 @@ def duo_inner(theme):
     b.append(f'<rect x="{dx}" y="196" width="{dw}" height="230" rx="24" fill="{t["cell"]}"/>')
     b.append(T(dx + 20, 238, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=t["cell"]))
     b.append(T(dx + 20, 266, "帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
-    b.append(T(dx + 20, 400, "晴れ・午後 5:12", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(weather_line(dx + 20, 400, t, 15, t["cell"]))
     assert 196 + 230 < fold - 12  # keep the card clear of the fold band
     b.append(tab_bar(w, h, t, maxw=420))
     return svg(w, h, t["bg"], "".join(b))
@@ -544,6 +592,7 @@ def duo_inner_landscape(theme, folded=False):
     # Trailing-edge controls for the detail pane: primary action first, then search.
     b.append(f'<circle cx="{cx}" cy="80" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
              f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(cx - 12, 68, t["accent"]))
+    b.append(trash_btn(cx, 130, t))
     # Tab bar stays on the trailing edge, bottom-aligned (symbols only, as in Apple's figure).
     th = 3 * 62 + 12
     ty = h - 24 - 54 - th
@@ -577,7 +626,7 @@ def duo_inner_landscape(theme, folded=False):
     b.append(f'<rect x="{dx}" y="120" width="{dw}" height="190" rx="24" fill="{t["cell"]}"/>')
     b.append(T(dx + 20, 162, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=t["cell"]))
     b.append(T(dx + 20, 190, "帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
-    b.append(T(dx + 20, 284, "晴れ・午後 5:12", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(weather_line(dx + 20, 284, t, 15, t["cell"]))
     return svg(w, h, t["bg"], "".join(b))
 
 
@@ -636,11 +685,12 @@ def watch_ax3():
     b = [T(w - 18, 28, "9:41", 15, "#FFFFFF", 600, "end", **W),
          T(w - 18, 58, "今日の", 23, "#0091FF", 600, "end", **W),
          T(w - 18, 86, "ひとこと", 23, "#0091FF", 600, "end", **W),
-         f'<rect x="10" y="100" width="{w-20}" height="170" rx="20" fill="#1C1C1E"/>',
+         f'<rect x="10" y="100" width="{w-20}" height="220" rx="20" fill="#1C1C1E"/>',
          T(22, 136, "公園の銀杏", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
          T(22, 166, "が色づいて", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
-         T(22, 196, "きた。", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
-         T(22, 232, "午後 5:12", 19, "#EBEBF5", 400, op=0.6, bg="#1C1C1E", **W)]
+         T(22, 196, "きた。帰り", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
+         T(22, 226, "にパン屋へ", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
+         T(22, 256, "寄った。", 23, "#FFFFFF", 400, bg="#1C1C1E", **W)]
     return svg(w, h, "#000000", "".join(b))
 
 
