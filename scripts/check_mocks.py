@@ -9,11 +9,14 @@ Checks per SVG:
     full-canvas <rect> fill. Put data-bg="#RRGGBB" on a <g> or <text> drawn over
     buttons, cards or images so the check uses the right color.
   - text that probably runs off the canvas (rough width estimate; WARN only)
-  - iPhone Duo inner screens drawn partially folded (file name contains "-folded"): text on the
-    fold band (centre ±13pt, vertical in landscape, horizontal in portrait). The fold only exists
+  - iPhone Duo inner screens drawn partially folded (file name contains "-folded"): text,
+    small shapes (buttons, <=60pt) touching the band and larger shapes crossing the fold line are
+    errors on the fold band (centre ±13pt, vertical in landscape, horizontal in portrait). The fold only exists
     when partially folded (zero width when fully open). Mark scrolling text/lists with data-fold-ok
   - <style> blocks (their rules are not checked; WARN only - use attributes instead)
-  - every *-light.svg has a *-dark.svg (and vice versa)
+  - text inside a semi-transparent rect: data-bg must be the composite colour
+  - every *-light.svg has a *-dark.svg (and vice versa), and the dark one really is different
+    (not a byte copy, not the same root background)
   - a PNG exists next to it, is not older than the SVG, has no alpha channel and has a color profile
 
 Usage: check_mocks.py DIR_OR_FILES...   (exit code 1 if any ERROR)
@@ -114,9 +117,34 @@ def check_svg(path: Path, errors, warns):
         page_bg = (1, 1, 1)
         warns.append(f"{path}: no background found (add data-bg on <svg>); assuming white")
 
+    folded = bool(name and name.startswith("iphone-duo-inner") and "-folded" in path.name)
+    tints = []  # filled rects/circles drawn so far: (x, y, w, h, colour, alpha)
+
+    def num(v):
+        try:
+            return float(re.sub(r"[a-z%]+$", "", str(v).split()[0]))
+        except (ValueError, IndexError):
+            return None
+
+    def shape_box(el, s):
+        tag = local(el.tag)
+        if tag == "rect":
+            x, y, rw, rh = (num(s.get(k, 0)) for k in ("x", "y", "width", "height"))
+            if None in (x, y, rw, rh):
+                return None
+            return x, y, rw, rh
+        if tag == "circle":
+            cx, cy, r = (num(s.get(k, 0)) for k in ("cx", "cy", "r"))
+            if None in (cx, cy, r):
+                return None
+            return cx - r, cy - r, 2 * r, 2 * r
+        return None
+
     def walk(el, inh):
         s = style_dict(el)
         cur = dict(inh)
+        if "transform" in s:
+            cur["xf"] = True
         for k in ("fill", "font-size", "font-weight", "opacity", "fill-opacity", "text-anchor"):
             if k in s:
                 cur[k] = s[k]
@@ -124,6 +152,23 @@ def check_svg(path: Path, errors, warns):
             cur["bg"] = parse_color(s["data-bg"]) or cur["bg"]
         if "data-fold-ok" in s:
             cur["fold_ok"] = True
+        box = shape_box(el, s) if not cur.get("xf") else None
+        if box and not (box[2] >= w - 1 and box[3] >= h - 1):
+            fc = parse_color(s.get("fill", cur.get("fill")))
+            a = float(s.get("fill-opacity", 1)) * float(s.get("opacity", 1))
+            if fc:
+                tints.append((*box, fc, a))  # every filled shape, in drawing order
+            if folded and not cur.get("fold_ok"):
+                bx, by, bw, bh = box
+                small = bw <= 60 and bh <= 60
+                if h > w:
+                    lo, hi, c = by, by + bh, h / 2
+                else:
+                    lo, hi, c = bx, bx + bw, w / 2
+                hit = (lo < c + FOLD_BAND and hi > c - FOLD_BAND) if small else (lo < c < hi)
+                if hit:
+                    errors.append(f"{path}: {local(el.tag)} at ({bx:g},{by:g}) {bw:g}x{bh:g} sits on the fold band "
+                                  f"(move buttons, images and cards off the fold; mark scrolling lists data-fold-ok)")
         if local(el.tag) in ("text", "tspan") and "".join(el.itertext()).strip():
             text = "".join(el.itertext()).strip()[:24]
             fs = cur.get("font-size")
@@ -150,11 +195,27 @@ def check_svg(path: Path, errors, warns):
                 else:
                     hit = left < w / 2 + FOLD_BAND and left + est > w / 2 - FOLD_BAND
                 if hit and "data-fold-ok" not in s and not cur.get("fold_ok"):
-                    warns.append(f"{path}: text '{text}' sits on the fold band "
+                    errors.append(f"{path}: text '{text}' sits on the fold band "
                                  f"(add data-fold-ok on scrolling body text or lists, otherwise move it)")
             if size is not None and size < min_pt:
                 errors.append(f"{path}: text '{text}' is {size:g}pt (< {min_pt}pt minimum for {platform})")
             fg = parse_color(cur.get("fill", "#000000"))
+            if fg and size and local(el.tag) == "text" and el.get("x") and el.get("y") and not cur.get("xf"):
+                # Text on a translucent tint: data-bg must be the composite colour, not the colour underneath.
+                full = "".join(el.itertext()).strip()
+                est = sum(size if ord(ch) > 0x2E7F else size * 0.56 for ch in full)
+                tx, ty = num(el.get("x")), num(el.get("y"))
+                anchor = cur.get("text-anchor", "start")
+                mx = tx - est / 2 if anchor == "end" else tx if anchor == "middle" else tx + est / 2
+                my = ty - size * 0.35
+                under = [tb for tb in tints if tb[0] <= mx <= tb[0] + tb[2] and tb[1] <= my <= tb[1] + tb[3]]
+                if under and under[-1][5] < 1:  # the topmost shape under the text is translucent
+                    rx, ry, rw_, rh_, tc, ta = under[-1]
+                    comp = blend(tc, cur["bg"], ta)
+                    if max(abs(x - y) for x, y in zip(comp, cur["bg"])) > 2 / 255:
+                        hexc = "#" + "".join(f"{round(v * 255):02X}" for v in comp)
+                        errors.append(f"{path}: text '{text}' sits on a translucent shape; data-bg should be the "
+                                      f"composite colour {hexc}, not the colour underneath")
             if fg and size and local(el.tag) == "text":
                 a = float(cur.get("opacity", 1)) * float(cur.get("fill-opacity", 1))
                 fg = blend(fg, cur["bg"], a)
@@ -200,6 +261,17 @@ def main():
         for a, b in (("-light.svg", "-dark.svg"), ("-dark.svg", "-light.svg")):
             if f.name.endswith(a) and f.name[: -len(a)] + b not in names:
                 errors.append(f"{f}: missing pair {f.name[: -len(a)] + b}")
+        if f.name.endswith("-dark.svg"):
+            lf = f.with_name(f.name[: -len("-dark.svg")] + "-light.svg")
+            if lf.exists():
+                try:
+                    bl, bd = ET.parse(lf).getroot().get("data-bg"), ET.parse(f).getroot().get("data-bg")
+                except ET.ParseError:
+                    bl = bd = None
+                if lf.read_bytes() == f.read_bytes():
+                    errors.append(f"{f}: identical to {lf.name} (draw the dark version with dark colours)")
+                elif bl and bd and bl.lower() == bd.lower():
+                    errors.append(f"{f}: same background {bd} as {lf.name} (dark mode needs dark backgrounds)")
     for w in warns:
         print("WARN ", w)
     for e in errors:

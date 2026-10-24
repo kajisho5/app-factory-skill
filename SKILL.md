@@ -24,6 +24,7 @@ design/
     watch-ultra-S-01.svg / .png
 ```
 
+- 画面ID（`S-01` など）は設計書の画面一覧の番号で、全端末で共通にする。特定の端末にしかない画面（Watch だけの画面など）も同じ通し番号の続きを使い、画面一覧の「端末」の列に対象を書く。
 - ファイル名は `<端末>-<画面ID>[-<状態>]-<light|dark>.svg`。状態（`empty`、`ax5`、`folded` など）はモードの前に書き、状態のモックもライトとダークの組で描く。Apple Watch は黒背景のみなので `-light`／`-dark` を付けない（例： `watch-ultra-S-01.svg`）。端末名は `scripts/devices.py` の名前（`iphone`、`iphone-duo-outer`、`iphone-duo-inner`、`ipad-landscape`、`ipad-portrait`、`mac`、`watch-ultra` など）を使う。この名前でキャンバス寸法と書き出し倍率が決まる
 - 完成例： `examples/hitokoto/`（架空のアプリ「ひとこと日記」）
 - 以下の `<SKILL>` は、このスキルのフォルダ（例： `~/.claude/skills/hig-design-skill`）。スクリプトは作業フォルダから `python3 <SKILL>/scripts/...` で呼ぶ
@@ -65,6 +66,10 @@ design/
      - 最大文字サイズ（AX5）： `iphone-S-01-ax5-light.svg` / `-dark.svg`（横並びを縦に積む組み替えを見せる）。Watch は最大が AX3（Body 23pt）。主要な文字（名前・題名・本文）は省略せず折り返す。ただし一覧の行のように、選ぶと全文が読める画面がある場合は数行で末尾を省略してよい。横並びの補足（日付など）は別の行に移す。補足の情報（宛先など）は末尾を省略してよく、装飾的な画像（アバターなど）は消してよい。バーとバーのボタンは大きくしない（HIG の図）
      - iPad の細いウィンドウ： `ipad-narrow-S-01-light.svg` / `-dark.svg`（サイドバーを畳んだ状態など）
      - 権限を使うアプリは、システムのダイアログの前に出す説明画面（ボタン1つ、「続ける」）
+     - 課金があるアプリは、無料版の上限に達したときの画面と課金画面（`references/hig-specs.md` §8 の「課金画面」の内容をすべて載せる）
+     - 通信や時間のかかる処理があるアプリは、読み込み中とエラー（直し方が分かる文言）の画面
+     - Apple Watch に対応するアプリは、最大文字サイズ（AX3）の Watch 画面（`watch-ultra-S-01-ax3.svg`）
+     - ここに挙げたモックは必須。描かないものは、設計書の「成果物一覧」に理由を書く
    - **端末フレーム**： 掲載用に枠付きの画像が欲しい場合は `<SKILL>/scripts/frame.py iphone|duo-outer|duo-inner|ipad|mac|watch` で作り、出力名は `framed-<元の画面名>.svg` にする（スクリーンショット用の画面モックと区別するため）
      - `frame.py` の枠は社内の設計確認用。外部に出すマーケティング画像（Web・広告・SNS）は Apple Design Resources の公式の製品ベゼル（iPhone Duo を含む）を使い、App Store Marketing Guidelines に従う（最新世代の端末、反射・影・傾け・切り抜きなどの加工をしない、宣伝の文字はベゼルの横に置く、画面上で高さ200px以上、複数の端末は正しい大きさの比率、架空のアカウント情報、ステータスバーは電波・Wi-Fi・電池をすべて満表示）。ベゼル素材の使用許諾は素材に同梱の条件を確認する（`references/hig-specs.md` §15）
    - **2台並びの確認用画像（pair）**： 必要なら、描いた iPhone 画面2枚から `<SKILL>/scripts/frame.py pair` で作る（出力名は `pair-...`）。これも社内確認用で、外部に出す2台並びは公式の製品ベゼルで作り直す。2枚は同じモード・同じ時刻・同じデータにし、一覧と詳細のように役割が分かる組み合わせにする
@@ -75,7 +80,7 @@ design/
    ```
    エラーが0になるまで直し、警告も確認する。依存： `pip install -r <SKILL>/requirements.txt`（Cairo 本体が必要： Mac は `brew install cairo`、Debian/Ubuntu は `sudo apt-get install libcairo2`）。和文の書体が入っていない環境では、PNGの日本語が表示されない（Noto Sans CJK JP かヒラギノを入れる）
 6. **目で確認する** — 書き出したPNGを実際に開いて見る。機械チェックでは分からない、はみ出し・重なり・切れた文字・揃っていない余白・Safe Area への食い込みを直す
-7. **design-check-skill で監査する** — 設計書とモックを design-check-skill（kajisho5/design-check-skill）で監査し、その終了条件（パスごとに毎回新しい観点で見直し、「新規の抜けゼロ」が3回連続）まで回す。結果は設計書の「監査結果」に貼る。design-check-skill が使えない環境では、`references/hig-specs.md` と設計書を1項目ずつ突き合わせる簡易チェックを行い、「design-check-skill による監査は未実施」と書く。監査で「モックがない」「モックが決まりに反する」という抜けが出たら、手順3〜6に戻ってこのスキルで描き直し、`export_png.py` と `check_mocks.py` をやり直してから監査を続ける（design-check-skill はデザインを新しく描かない）
+7. **design-check-skill で監査する** — 設計書とモックを design-check-skill（kajisho5/design-check-skill）で監査し、その終了条件（パスごとに毎回新しい観点で見直し、「新規の抜けゼロ」が3回連続）まで回す。結果は設計書の「監査結果」に貼る。design-check-skill が使えない環境では、`references/hig-specs.md` と設計書を1項目ずつ突き合わせる簡易チェックを行い、「design-check-skill による監査は未実施」と書く。監査で「モックがない」「モックが決まりに反する」という抜けが出たら、手順3〜6に戻ってこのスキルで描き直し、`export_png.py` と `check_mocks.py` をやり直してから監査を続ける（design-check-skill はデザインを新しく描かない）。監査は、できればデザインを描いた担当とは別の担当（別のエージェントなど）に頼む（自分の成果物を自分で採点すると見落とすため）。各パスで抜けと判定した項目IDと根拠を記録し、後から確かめられるようにする
 8. **渡す** — 設計書とPNGをユーザーに渡す（SVGは原版としてフォルダに残す）。スマートフォンで見る人がいるので、PNGを必ず添える。最後に、監査の結果（総パス数・保留）を1〜2行で伝える
 
 ## デザインの原則（全プラットフォーム共通）

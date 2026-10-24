@@ -15,10 +15,10 @@ WATCH_FONT = "'SF Compact Text', 'SF Compact Rounded', 'Hiragino Sans', 'Noto Sa
 
 THEMES = {
     "light": dict(bg="#F2F2F7", cell="#FFFFFF", label="#000000", sec="#3C3C43", sec_op=0.8,
-                  sep="#C6C6C8", accent="#0088FF", glass="#FFFFFF", glass_op=0.82, glass_stroke="#D1D1D6",
+                  sep="#C6C6C8", accent="#0088FF", accent_text="#0066CC", glass="#FFFFFF", glass_op=0.82, glass_stroke="#D1D1D6",
                   side="#F2F2F7", desk="#C9D3DF", win="#FFFFFF", bar="#F6F6F6"),
     "dark": dict(bg="#000000", cell="#1C1C1E", label="#FFFFFF", sec="#EBEBF5", sec_op=0.6,
-                 sep="#38383A", accent="#0091FF", glass="#2C2C2E", glass_op=0.82, glass_stroke="#48484A",
+                 sep="#38383A", accent="#0091FF", accent_text="#5CB8FF", glass="#2C2C2E", glass_op=0.82, glass_stroke="#48484A",
                  side="#1C1C1E", desk="#1F2633", win="#1E1E1E", bar="#2A2A2A"),
 }
 
@@ -89,23 +89,25 @@ def status_bar(w, t):
               f'stroke-opacity="0.4"/><rect x="{w-60}" y="27" width="20" height="9" rx="2" fill="{t["label"]}"/>')
 
 
-def symbol_filled(kind, cx, cy, c):
-    """Filled stand-ins: iOS tab bars use the .fill variant of SF Symbols."""
+def symbol_filled(kind, cx, cy, c, cut="#FFFFFF"):
+    """Filled stand-ins: iOS tab bars use the .fill variant of SF Symbols.
+    `cut` is the colour of the cut-out details (the bar colour behind the symbol)."""
     if kind == "book":
         return (f'<rect x="{cx-9}" y="{cy-10}" width="18" height="20" rx="2" fill="{c}"/>'
-                f'<rect x="{cx-4.5}" y="{cy-10}" width="1.5" height="20" fill="#FFFFFF" fill-opacity="0.6"/>')
+                f'<rect x="{cx-4.5}" y="{cy-10}" width="1.5" height="20" fill="{cut}"/>')
     if kind == "cal":
         return (f'<rect x="{cx-10}" y="{cy-9}" width="20" height="18" rx="3" fill="{c}"/>'
-                f'<rect x="{cx-10}" y="{cy-4}" width="20" height="1.5" fill="#FFFFFF" fill-opacity="0.6"/>')
+                f'<rect x="{cx-10}" y="{cy-4}" width="20" height="1.5" fill="{cut}"/>')
     if kind == "gear":
         return (f'<circle cx="{cx}" cy="{cy}" r="9" fill="{c}"/>'
-                f'<circle cx="{cx}" cy="{cy}" r="3.5" fill="#FFFFFF" fill-opacity="0.7"/>')
+                f'<circle cx="{cx}" cy="{cy}" r="3.5" fill="{cut}"/>')
     return ""
 
 
 def tab_bar(w, h, t, active=0):
     # Floating Liquid Glass tab bar: navigation only, symbol + one-word label per tab.
-    bw, bh = w - 2 * 21, 62
+    bh = 62
+    bw = w - 2 * 21 - bh - 10  # search is its own tab at the trailing end (separate round button)
     x, y = 21, h - 34 - bh
     parts = [f'<rect x="{x}" y="{y}" width="{bw}" height="{bh}" rx="31" fill="{t["glass"]}" '
              f'fill-opacity="{t["glass_op"]}" stroke="{t["glass_stroke"]}"/>']
@@ -113,11 +115,12 @@ def tab_bar(w, h, t, active=0):
     for i, (sym, lab) in enumerate(tabs):
         cx = x + bw * (i + 0.5) / 3
         col = t["accent"] if i == active else t["label"]
+        tabbg = mix(t["accent"], t["glass"], 0.12) if i == active else t["glass"]
         if i == active:
-            parts.append(f'<rect x="{cx-52}" y="{y+5}" width="104" height="{bh-10}" rx="26" '
-                         f'fill="{t["accent"]}" fill-opacity="0.12"/>')
-        parts.append(symbol_filled(sym, cx, y + 22, col))
-        parts.append(T(cx, y + 50, lab, 11, col, 600, "middle", bg=t["glass"]))
+            parts.append(f'<rect x="{cx-46}" y="{y+5}" width="92" height="{bh-10}" rx="26" fill="{tabbg}"/>')
+        parts.append(symbol_filled(sym, cx, y + 22, col, tabbg))
+        parts.append(T(cx, y + 50, lab, 11, col, 600, "middle", bg=tabbg))
+    parts.append(search_btn(w - 21 - bh / 2, y + bh / 2, t).replace('r="22"', f'r="{bh/2}"', 1))
     return "".join(parts)
 
 
@@ -128,7 +131,6 @@ def iphone_list(theme):
     # Toolbar button (add) top-right, 44x44 hit area.
     b.append(f'<circle cx="{w-38}" cy="84" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
              f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(w - 50, 72, t["accent"]))
-    b.append(search_btn(w - 90, 84, t))
     b.append(T(20, 150, "日記", 34, t["label"], 700))
     b.append(T(20, 180, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     y = 204
@@ -407,18 +409,14 @@ def duo_side_column(w, h, t, active=0):
     cx = x + 26
     parts = [f'<circle cx="{cx}" cy="34" r="16" fill="#000"/>',
              T(cx, 78, "9:41", 13, t["label"], 600, "middle")]
-    # Toolbar: primary action first, then search. Symbols only (text buttons stay horizontal).
-    for k, y0 in enumerate((112, 162)):
-        parts.append(f'<circle cx="{cx}" cy="{y0}" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
-                     f'stroke="{t["glass_stroke"]}"/>')
-        if k == 0:
-            parts.append(symbol_pencil(cx - 12, y0 - 12, t["accent"]))
-        else:
-            parts.append(f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><circle cx="{cx-2}" cy="{y0-2}" r="7"/>'
-                         f'<path d="M{cx+3} {y0+3}l5 5"/></g>')
-    # Tab bar, vertical, at the bottom of the column.
+    # Toolbar: the primary action (symbol only; text buttons stay horizontal).
+    parts.append(f'<circle cx="{cx}" cy="112" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
+                 f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(cx - 12, 100, t["accent"]))
+    # Tab bar, vertical, at the bottom of the column; the search tab is a separate circle below it
+    # (as in Apple's figure).
     th = 3 * 62 + 12
-    ty = h - 24 - th
+    ty = h - 24 - 54 - th
+    parts.append(search_btn(cx, h - 24 - 22, t))
     parts.append(f'<rect x="{x+2}" y="{ty}" width="48" height="{th}" rx="24" fill="{t["glass"]}" '
                  f'fill-opacity="{t["glass_op"]}" stroke="{t["glass_stroke"]}"/>')
     for k, sym in enumerate(("book", "cal", "gear")):
@@ -427,7 +425,7 @@ def duo_side_column(w, h, t, active=0):
         if k == active:
             parts.append(f'<rect x="{x+6}" y="{cy-27}" width="40" height="54" rx="20" fill="{t["accent"]}" '
                          f'fill-opacity="0.12"/>')
-        parts.append(symbol_filled(sym, cx, cy, col))
+        parts.append(symbol_filled(sym, cx, cy, col, mix(t["accent"], t["glass"], 0.12) if k == active else t["glass"]))
     return "".join(parts)
 
 
@@ -517,17 +515,12 @@ def duo_inner_landscape(theme, folded=False):
     dw = w - side - dx - 8
     b = [T(cx, 34, "9:41", 13, t["label"], 600, "middle")]
     # Trailing-edge controls for the detail pane: primary action first, then search.
-    for k, y0 in enumerate((80, 130)):
-        b.append(f'<circle cx="{cx}" cy="{y0}" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
-                 f'stroke="{t["glass_stroke"]}"/>')
-        if k == 0:
-            b.append(symbol_pencil(cx - 12, y0 - 12, t["accent"]))
-        else:
-            b.append(f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><circle cx="{cx-2}" cy="{y0-2}" r="7"/>'
-                     f'<path d="M{cx+3} {y0+3}l5 5"/></g>')
+    b.append(f'<circle cx="{cx}" cy="80" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
+             f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(cx - 12, 68, t["accent"]))
     # Tab bar stays on the trailing edge, bottom-aligned (symbols only, as in Apple's figure).
     th = 3 * 62 + 12
-    ty = h - 24 - th
+    ty = h - 24 - 54 - th
+    b.append(search_btn(cx, h - 24 - 22, t))
     b.append(f'<rect x="{cx-24}" y="{ty}" width="48" height="{th}" rx="24" fill="{t["glass"]}" '
              f'fill-opacity="{t["glass_op"]}" stroke="{t["glass_stroke"]}"/>')
     for k, sym in enumerate(("book", "cal", "gear")):
@@ -535,7 +528,8 @@ def duo_inner_landscape(theme, folded=False):
         if k == 0:
             b.append(f'<rect x="{cx-20}" y="{ky-27}" width="40" height="54" rx="20" fill="{t["accent"]}" '
                      f'fill-opacity="0.12"/>')
-        b.append(symbol_filled(sym, cx, ky, t["accent"] if k == 0 else t["label"]))
+        b.append(symbol_filled(sym, cx, ky, t["accent"] if k == 0 else t["label"],
+                               mix(t["accent"], t["glass"], 0.12) if k == 0 else t["glass"]))
     # List pane with its own controls at the top of the pane.
     b.append(f'<rect x="8" y="8" width="{lw+16}" height="{h-16}" rx="28" fill="{t["cell"]}"/>')
     b.append(f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><rect x="26" y="26" width="22" height="20" rx="3"/>'
@@ -558,6 +552,69 @@ def duo_inner_landscape(theme, folded=False):
     b.append(T(dx + 20, 190, "帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
     b.append(T(dx + 20, 284, "晴れ・午後 5:12 に記録", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     return svg(w, h, t["bg"], "".join(b))
+
+
+def iphone_purchase(theme):
+    """S-04: Pro purchase sheet, opened when the free limit (30) is reached. Shows the name,
+    one-time purchase (no subscription), local price, restore, terms and privacy links."""
+    t = THEMES[theme]
+    w, h = 402, 874
+    sy = 56
+    sheet = t["cell"] if theme == "light" else "#1C1C1E"
+    field = t["bg"] if theme == "light" else "#2C2C2E"
+    b = [status_bar(w, t),
+         f'<rect width="{w}" height="{h}" fill="#000000" fill-opacity="{0.25 if theme == "light" else 0.5}"/>',
+         f'<path d="M0 {sy+38}a38 38 0 0 1 38 -38h{w-76}a38 38 0 0 1 38 38v{h-sy-38}h-{w}z" fill="{sheet}"/>']
+    cx, cy = 46, sy + 48
+    b.append(f'<g aria-label="閉じる"><circle cx="{cx}" cy="{cy}" r="22" fill="{field}"/>'
+             f'<path d="M{cx-7} {cy-7}l14 14M{cx+7} {cy-7}l-14 14" stroke="{t["label"]}" stroke-width="2.4" stroke-linecap="round"/></g>')
+    b.append(T(32, 190, "30件に達しました", 28, t["label"], 700, bg=sheet))
+    b.append(T(32, 226, "無料版で書ける日記は30件までです。", 17, t["label"], 400, bg=sheet))
+    b.append(T(32, 252, "これまでの日記はそのまま残ります。", 17, t["label"], 400, bg=sheet))
+    b.append(f'<rect x="20" y="290" width="{w-40}" height="150" rx="26" fill="{field}"/>')
+    b.append(T(40, 330, "ひとこと日記 Pro", 20, t["label"], 700, bg=field))
+    b.append(T(40, 362, "買い切り（定期的な支払いはありません）", 15, t["sec"], 400, op=t["sec_op"], bg=field))
+    b.append(T(40, 390, "日記を無制限に書けます", 17, t["label"], 400, bg=field))
+    b.append(T(40, 418, "価格：¥480（税込）", 17, t["label"], 400, bg=field))
+    b.append(f'<rect x="20" y="{h-230}" width="{w-40}" height="54" rx="27" fill="{t["accent"]}"/>')
+    b.append(T(w / 2, h - 196, "¥480 で購入", 17, "#FFFFFF", 600, "middle", bg=t["accent"]))
+    b.append(T(w / 2, h - 140, "購入を復元", 17, t["accent_text"], 400, "middle", bg=sheet))
+    b.append(T(w / 2, h - 96, "利用規約 ・ プライバシーポリシー", 15, t["accent_text"], 400, "middle", bg=sheet))
+    b.append(f'<rect x="{w/2-70}" y="{h-13}" width="140" height="5" rx="2.5" fill="{t["label"]}"/>')
+    return svg(w, h, t["bg"], "".join(b))
+
+
+def iphone_permission(theme):
+    """S-06 state: explanation shown before the system notification dialog (one button, no close)."""
+    t = THEMES[theme]
+    w, h = 402, 874
+    b = [status_bar(w, t)]
+    # bell symbol (stand-in for bell.badge)
+    b.append(f'<g fill="none" stroke="{t["accent"]}" stroke-width="4" stroke-linejoin="round">'
+             f'<path d="M{w/2-34} 330c0-40 14-62 34-66v-6h0v6c20 4 34 26 34 66l10 14h-88z"/>'
+             f'<path d="M{w/2-10} 356a10 10 0 0 0 20 0"/></g>')
+    b.append(T(w / 2, 420, "書き忘れをお知らせします", 28, t["label"], 700, "middle"))
+    b.append(T(w / 2, 462, "毎晩、その日のひとことがまだのときに", 17, t["label"], 400, "middle"))
+    b.append(T(w / 2, 488, "1回だけ通知します。時刻は設定で変えられます。", 17, t["label"], 400, "middle"))
+    b.append(f'<rect x="20" y="{h-130}" width="{w-40}" height="54" rx="27" fill="{t["accent"]}"/>')
+    b.append(T(w / 2, h - 96, "続ける", 17, "#FFFFFF", 600, "middle", bg=t["accent"]))
+    b.append(f'<rect x="{w/2-70}" y="{h-13}" width="140" height="5" rx="2.5" fill="{t["label"]}"/>')
+    return svg(w, h, t["bg"], "".join(b))
+
+
+def watch_ax3():
+    """Largest Watch text size (AX3): Body 23pt. The page scrolls; the button follows the text."""
+    w, h = 211, 257
+    W = dict(font=WATCH_FONT)
+    b = [T(w - 18, 28, "9:41", 15, "#FFFFFF", 600, "end", **W),
+         T(w - 18, 58, "今日の", 23, "#0091FF", 600, "end", **W),
+         T(w - 18, 86, "ひとこと", 23, "#0091FF", 600, "end", **W),
+         f'<rect x="10" y="100" width="{w-20}" height="170" rx="20" fill="#1C1C1E"/>',
+         T(22, 136, "公園の銀杏", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
+         T(22, 166, "が色づいて", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
+         T(22, 196, "きた。", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
+         T(22, 232, "午後 5:12", 19, "#EBEBF5", 400, op=0.6, bg="#1C1C1E", **W)]
+    return svg(w, h, "#000000", "".join(b))
 
 
 files = {
@@ -587,6 +644,11 @@ files = {
     "iphone-S-01-ax5-dark.svg": iphone_ax5("dark"),
     "ipad-narrow-S-01-light.svg": ipad_narrow("light"),
     "ipad-narrow-S-01-dark.svg": ipad_narrow("dark"),
+    "iphone-S-04-light.svg": iphone_purchase("light"),
+    "iphone-S-04-dark.svg": iphone_purchase("dark"),
+    "iphone-S-06-permission-light.svg": iphone_permission("light"),
+    "iphone-S-06-permission-dark.svg": iphone_permission("dark"),
+    "watch-ultra-S-01-ax3.svg": watch_ax3(),
 }
 for name, content in files.items():
     (OUT / name).write_text(content, encoding="utf-8")
