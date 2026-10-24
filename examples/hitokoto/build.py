@@ -23,12 +23,18 @@ THEMES = {
 }
 
 ENTRIES = [
-    ("10月24日（土）", "公園の銀杏が色づいてきた。帰りにパン屋へ寄った。"),
+    ("10月24日（土）", "公園の銀杏が色づいてきた。\n帰りにパン屋へ寄った。"),
     ("10月23日（金）", "新しいノートを使い始めた。書き心地がいい。"),
     ("10月22日（木）", "雨。家で本を一冊読み終えた。"),
     ("10月21日（水）", "朝の散歩で猫に会った。"),
     ("10月20日（火）", "久しぶりにカレーを作った。少し辛すぎた。"),
 ]
+
+
+def one(s, n):
+    """List row: line breaks become spaces, then cut to n characters with an ellipsis."""
+    s = s.replace("\n", " ")
+    return s[:n] + ("…" if len(s) > n else "")
 
 
 def T(x, y, s, size, fill, weight=400, anchor="start", op=None, bg=None, font=None):
@@ -187,7 +193,7 @@ def iphone_list(theme):
     for i, (d, s) in enumerate(ENTRIES):
         cy = y + i * 76
         b.append(T(36, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-        b.append(T(36, cy + 56, s[:17] + ("…" if len(s) > 17 else ""), 17, t["label"], 400, bg=t["cell"]))
+        b.append(T(36, cy + 56, one(s, 17), 17, t["label"], 400, bg=t["cell"]))
         b.append(chevron(w - 44, cy + 38, t["label"]))
         if i < len(ENTRIES) - 1:
             b.append(f'<rect x="36" y="{cy+75.5}" width="{w-52}" height="0.5" fill="{t["sep"]}"/>')
@@ -248,7 +254,7 @@ def ipad(theme):
         if i == 0:
             b.append(f'<rect x="{lx+8}" y="{cy+6}" width="{lw-16}" height="64" rx="18" fill="{rowbg}"/>')
         b.append(T(lx + 20, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=rowbg))
-        b.append(T(lx + 20, cy + 56, s[:17] + ("…" if len(s) > 17 else ""), 17, t["label"], 400, bg=rowbg))
+        b.append(T(lx + 20, cy + 56, one(s, 17), 17, t["label"], 400, bg=rowbg))
     dx = lx + lw + 32
     # Toolbar: 編集, 今日を書く, then the search field at the trailing end (⌘F).
     sx = w - 28 - 250
@@ -264,7 +270,8 @@ def ipad(theme):
     d, s = ENTRIES[0]
     b.append(T(dx, 142, d, 28, t["label"], 700))
     b.append(f'<rect x="{dx}" y="160" width="{w-dx-28}" height="180" rx="26" fill="{t["cell"]}"/>')
-    b.append(T(dx + 24, 208, "公園の銀杏が色づいてきた。帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
+    b.append(T(dx + 24, 208, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=t["cell"]))
+    b.append(T(dx + 24, 236, "帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
     b.append(weather_line(dx + 24, 312, t, 15, t["cell"]))
     return svg(w, h, t["bg"], "".join(b))
 
@@ -318,13 +325,14 @@ def mac(theme):
         if i == 0:
             b.append(f'<rect x="{lx-8}" y="{y}" width="{lw}" height="52" rx="8" fill="{rowbg}"/>')
         b.append(T(lx, y + 20, d, 11, t["sec"], 400, op=t["sec_op"], bg=rowbg))
-        b.append(T(lx, y + 40, s[:20] + ("…" if len(s) > 20 else ""), 13, t["label"], 400, bg=rowbg))
+        b.append(T(lx, y + 40, one(s, 20), 13, t["label"], 400, bg=rowbg))
     dx = lx + lw + 24
     b.append(f'<rect x="{dx-12}" y="{wy+52}" width="0.5" height="{wh-60}" fill="{t["sep"]}"/>')
     d, s = ENTRIES[0]
     b.append(T(dx, wy + 96, d, 22, t["label"], 700, bg=t["win"]))
-    b.append(T(dx, wy + 136, s, 13, t["label"], 400, bg=t["win"]))
-    b.append(weather_line(dx, wy + 166, t, 11, t["win"]))
+    for k, line in enumerate(s.split("\n")):
+        b.append(T(dx, wy + 136 + 18 * k, line, 13, t["label"], 400, bg=t["win"]))
+    b.append(weather_line(dx, wy + 184, t, 11, t["win"]))
     return svg(w, h, t["desk"], "".join(b))
 
 
@@ -337,7 +345,7 @@ def watch():
          T(w - 18, 52, "今日のひとこと", 17, "#0091FF", 600, "end", **W),
          f'<rect x="10" y="66" width="{w-20}" height="108" rx="20" fill="#1C1C1E"/>',
          T(22, 104, "公園の銀杏が", 17, "#FFFFFF", 400, bg="#1C1C1E", **W),
-         T(22, 128, "色づいてきた。帰…", 17, "#FFFFFF", 400, bg="#1C1C1E", **W),
+         T(22, 128, "色づいてきた。 帰…", 17, "#FFFFFF", 400, bg="#1C1C1E", **W),
          T(22, 158, "午後 5:12", 14, "#EBEBF5", 400, op=0.6, bg="#1C1C1E", **W),
          f'<rect x="10" y="186" width="{w-20}" height="50" rx="25" fill="#0091FF"/>',
          '<g fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"><rect x="34" y="200" width="9" height="15" rx="4.5"/>'
@@ -428,7 +436,7 @@ def ipad_narrow(theme):
     for i, (d, s) in enumerate(ENTRIES):
         cy = 204 + i * 76
         b.append(T(40, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-        b.append(T(40, cy + 56, s[:27] + ("…" if len(s) > 27 else ""), 17, t["label"], 400, bg=t["cell"]))
+        b.append(T(40, cy + 56, one(s, 27), 17, t["label"], 400, bg=t["cell"]))
         b.append(chevron(w - 52, cy + 38, t["label"]))
         if i < len(ENTRIES) - 1:
             b.append(f'<rect x="40" y="{cy+75.5}" width="{w-60}" height="0.5" fill="{t["sep"]}"/>')
@@ -517,7 +525,7 @@ def duo_outer(theme):
     for i, (d, s) in enumerate(rows):
         cy = y + i * 76
         b.append(T(36, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-        b.append(T(36, cy + 56, s[:17] + ("…" if len(s) > 17 else ""), 17, t["label"], 400, bg=t["cell"]))
+        b.append(T(36, cy + 56, one(s, 17), 17, t["label"], 400, bg=t["cell"]))
         b.append(chevron(cw - 30, cy + 38, t["label"]))
         if i < len(rows) - 1:
             b.append(f'<rect x="36" y="{cy+75.5}" width="{cw-60}" height="0.5" fill="{t["sep"]}"/>')
@@ -557,7 +565,7 @@ def duo_inner(theme):
         if i == 0:
             b.append(f'<rect x="{lx+8}" y="{cy+6}" width="{lw-16}" height="64" rx="18" fill="{rowbg}"/>')
         b.append(T(lx + 20, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=rowbg))
-        b.append(T(lx + 20, cy + 56, s[:14] + ("…" if len(s) > 14 else ""), 17, t["label"], 400, bg=rowbg))
+        b.append(T(lx + 20, cy + 56, one(s, 14), 17, t["label"], 400, bg=rowbg))
     b.append('</g>')
     # Detail: the whole card stays above the fold band.
     d, s = ENTRIES[0]
@@ -617,7 +625,7 @@ def duo_inner_landscape(theme, folded=False):
             b.append(f'<rect x="16" y="{cy+6}" width="{lw}" height="64" rx="18" fill="{rowbg}"/>')
         n = 15 if folded else 16
         b.append(T(32, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=rowbg))
-        b.append(T(32, cy + 56, s[:n] + ("…" if len(s) > n else ""), 17, t["label"], 400, bg=rowbg))
+        b.append(T(32, cy + 56, one(s, n), 17, t["label"], 400, bg=rowbg))
     # Detail pane.
     d, s = ENTRIES[0]
     b.append(T(dx + 8, 98, d, 28, t["label"], 700))
@@ -645,7 +653,7 @@ def iphone_purchase(theme):
     b.append(f'<g aria-label="閉じる"><circle cx="{cx}" cy="{cy}" r="22" fill="{field}"/>'
              f'<path d="M{cx-7} {cy-7}l14 14M{cx+7} {cy-7}l-14 14" stroke="{t["label"]}" stroke-width="2.4" stroke-linecap="round"/></g>')
     b.append(T(32, 190, "30件に達しました", 28, t["label"], 700, bg=sheet))
-    b.append(T(32, 226, "無料版で書ける日記は30件までです。", 17, t["label"], 400, bg=sheet))
+    b.append(T(32, 226, "無料版で書ける日記は 30件までです。", 17, t["label"], 400, bg=sheet))
     b.append(T(32, 252, "これまでの日記はそのまま残ります。", 17, t["label"], 400, bg=sheet))
     b.append(f'<rect x="20" y="290" width="{w-40}" height="150" rx="26" fill="{field}"/>')
     b.append(T(40, 330, "ひとこと日記 Pro", 20, t["label"], 700, bg=field))
@@ -688,9 +696,9 @@ def watch_ax3():
          f'<rect x="10" y="100" width="{w-20}" height="220" rx="20" fill="#1C1C1E"/>',
          T(22, 136, "公園の銀杏", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
          T(22, 166, "が色づいて", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
-         T(22, 196, "きた。帰り", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
-         T(22, 226, "にパン屋へ", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
-         T(22, 256, "寄った。", 23, "#FFFFFF", 400, bg="#1C1C1E", **W)]
+         T(22, 196, "きた。", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
+         T(22, 226, "帰りにパン", 23, "#FFFFFF", 400, bg="#1C1C1E", **W),
+         T(22, 256, "屋へ寄った。", 23, "#FFFFFF", 400, bg="#1C1C1E", **W)]
     return svg(w, h, "#000000", "".join(b))
 
 
