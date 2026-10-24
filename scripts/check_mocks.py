@@ -9,6 +9,8 @@ Checks per SVG:
     full-canvas <rect> fill. Put data-bg="#RRGGBB" on a <g> or <text> drawn over
     buttons, cards or images so the check uses the right color.
   - text that probably runs off the canvas (rough width estimate; WARN only)
+  - iPhone Duo inner screens: text on the fold band (centre ±12pt, horizontal in portrait,
+    vertical in landscape). Mark scrolling body text or lists with data-fold-ok. WARN only
   - <style> blocks (their rules are not checked; WARN only - use attributes instead)
   - every *-light.svg has a *-dark.svg (and vice versa)
   - a PNG exists next to it, is not older than the SVG, and has no alpha channel
@@ -24,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from devices import CANVASES, MIN_FONT_PT, canvas_for  # noqa: E402
 
 NAMED = {"white": "#FFFFFF", "black": "#000000"}
+FOLD_BAND = 12  # pt either side of the iPhone Duo inner fold (rule of thumb, not an Apple value)
 
 
 def parse_color(v):
@@ -118,6 +121,8 @@ def check_svg(path: Path, errors, warns):
                 cur[k] = s[k]
         if "data-bg" in s:
             cur["bg"] = parse_color(s["data-bg"]) or cur["bg"]
+        if "data-fold-ok" in s:
+            cur["fold_ok"] = True
         if local(el.tag) in ("text", "tspan") and "".join(el.itertext()).strip():
             text = "".join(el.itertext()).strip()[:24]
             fs = cur.get("font-size")
@@ -130,6 +135,22 @@ def check_svg(path: Path, errors, warns):
                 left = x - est if anchor == "end" else x - est / 2 if anchor == "middle" else x
                 if left < -1 or left + est > w + 1:
                     warns.append(f"{path}: text '{text}' may run off the canvas (estimated width {est:.0f}pt)")
+            if size is not None and local(el.tag) == "text" and name and name.startswith("iphone-duo-inner") \
+                    and el.get("x") and el.get("y") and "transform" not in s:
+                # Fold band: horizontal across the middle in portrait, vertical in landscape.
+                full = "".join(el.itertext()).strip()
+                est = sum(size if ord(ch) > 0x2E7F else size * 0.56 for ch in full)
+                x = float(re.sub(r"[a-z%]+$", "", el.get("x").split()[0]))
+                y = float(re.sub(r"[a-z%]+$", "", el.get("y").split()[0]))
+                anchor = cur.get("text-anchor", "start")
+                left = x - est if anchor == "end" else x - est / 2 if anchor == "middle" else x
+                if h > w:
+                    hit = (y - size * 0.85) < h / 2 + FOLD_BAND and y + size * 0.15 > h / 2 - FOLD_BAND
+                else:
+                    hit = left < w / 2 + FOLD_BAND and left + est > w / 2 - FOLD_BAND
+                if hit and "data-fold-ok" not in s and not cur.get("fold_ok"):
+                    warns.append(f"{path}: text '{text}' sits on the fold band "
+                                 f"(add data-fold-ok on scrolling body text or lists, otherwise move it)")
             if size is not None and size < min_pt:
                 errors.append(f"{path}: text '{text}' is {size:g}pt (< {min_pt}pt minimum for {platform})")
             fg = parse_color(cur.get("fill", "#000000"))

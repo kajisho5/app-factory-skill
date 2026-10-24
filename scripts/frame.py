@@ -103,9 +103,14 @@ def device(kind, path, ox, oy, scale, uid):
         parts.append(f'<rect x="{ox + bw / 2 - pw / 2:g}" y="{oy + b + 11 * scale:g}" width="{pw:g}" '
                      f'height="{ph:g}" rx="{ph / 2:g}" fill="#000"/>')
     if kind == "duo-inner":
-        # Fold line down the middle (presentation only; the real crease is barely visible).
-        parts.append(f'<rect x="{ox + bw / 2 - 0.5 * scale:g}" y="{oy + b:g}" width="{1 * scale:g}" '
-                     f'height="{sh:g}" fill="#000" fill-opacity="0.12"/>')
+        # Fold line (presentation only; the real crease is barely visible): horizontal across
+        # the middle in portrait, vertical in landscape.
+        if sh > sw:
+            parts.append(f'<rect x="{ox + b:g}" y="{oy + bh / 2 - 0.5 * scale:g}" width="{sw:g}" '
+                         f'height="{1 * scale:g}" fill="#808080" fill-opacity="0.35"/>')
+        else:
+            parts.append(f'<rect x="{ox + bw / 2 - 0.5 * scale:g}" y="{oy + b:g}" width="{1 * scale:g}" '
+                         f'height="{sh:g}" fill="#808080" fill-opacity="0.35"/>')
     if kind == "mac":
         # Simple stand under the display.
         parts.append(f'<rect x="{ox + bw * 0.42:g}" y="{oy + bh:g}" width="{bw * 0.16:g}" '

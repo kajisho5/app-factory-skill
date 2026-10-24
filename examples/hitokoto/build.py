@@ -341,84 +341,107 @@ def iphone_compose(theme):
     return svg(w, h, t["bg"], "".join(b))
 
 
-def duo_system_strip(w, h, t):
-    """iPhone Duo: the status bar and Dynamic Island sit on the side of the display.
-    Exact positions are not published; this right-edge strip is an approximation."""
-    x = w - 44
-    return (f'<rect x="{x+15}" y="20" width="14" height="44" rx="7" fill="#000"/>'
-            + T(x + 22, 88, "9:41", 13, t["label"], 600, "middle"))
-
-
-def duo_side_buttons(w, t, y0=110):
-    """Standard bar buttons laid out vertically under the side status bar (iOS 27.1 SDK)."""
-    x = w - 44 + 22
-    return (f'<circle cx="{x}" cy="{y0}" r="20" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
-            f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(x - 12, y0 - 12, t["accent"])
-            + f'<circle cx="{x}" cy="{y0+50}" r="20" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
-            f'stroke="{t["glass_stroke"]}"/><g fill="none" stroke="{t["label"]}" stroke-width="2">'
-            f'<circle cx="{x-2}" cy="{y0+48}" r="7"/><path d="M{x+3} {y0+53}l5 5"/></g>')
+def duo_side_column(w, h, t, active=0):
+    """Outer display: everything that sits at the top/bottom on other iPhones moves to the
+    trailing edge, top to bottom: camera/Dynamic Island, status bar, toolbar, tab bar
+    (HIG "Designing for iPhone Duo"). Exact positions are not published: approximation."""
+    x = w - 52
+    cx = x + 26
+    parts = [f'<rect x="{cx-7}" y="16" width="14" height="40" rx="7" fill="#000"/>',
+             T(cx, 78, "9:41", 13, t["label"], 600, "middle")]
+    # Toolbar: primary action first, then search. Symbols only (text buttons stay horizontal).
+    for k, y0 in enumerate((112, 162)):
+        parts.append(f'<circle cx="{cx}" cy="{y0}" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
+                     f'stroke="{t["glass_stroke"]}"/>')
+        if k == 0:
+            parts.append(symbol_pencil(cx - 12, y0 - 12, t["accent"]))
+        else:
+            parts.append(f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><circle cx="{cx-2}" cy="{y0-2}" r="7"/>'
+                         f'<path d="M{cx+3} {y0+3}l5 5"/></g>')
+    # Tab bar, vertical, at the bottom of the column.
+    th = 3 * 62 + 12
+    ty = h - 24 - th
+    parts.append(f'<rect x="{x+2}" y="{ty}" width="48" height="{th}" rx="24" fill="{t["glass"]}" '
+                 f'fill-opacity="{t["glass_op"]}" stroke="{t["glass_stroke"]}"/>')
+    for k, sym in enumerate(("book", "cal", "gear")):
+        cy = ty + 6 + 62 * k + 31
+        col = t["accent"] if k == active else t["label"]
+        if k == active:
+            parts.append(f'<rect x="{x+6}" y="{cy-27}" width="40" height="54" rx="20" fill="{t["accent"]}" '
+                         f'fill-opacity="0.12"/>')
+        parts.append(symbol(sym, cx, cy, col))
+    return "".join(parts)
 
 
 def duo_outer(theme):
     t = THEMES[theme]
     w, h = 466, 678
-    cw = w - 44  # content width left of the side strip
-    b = [duo_system_strip(w, h, t), duo_side_buttons(w, t)]
+    cw = w - 52  # content width left of the side column
+    b = [duo_side_column(w, h, t)]
     b.append(T(20, 64, "日記", 34, t["label"], 700))
     b.append(T(20, 94, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     y = 116
-    rows = ENTRIES[:4]
-    b.append(f'<rect x="16" y="{y}" width="{cw-28}" height="{len(rows)*76}" rx="26" fill="{t["cell"]}"/>')
+    rows = ENTRIES
+    b.append(f'<rect x="16" y="{y}" width="{cw-24}" height="{len(rows)*76}" rx="26" fill="{t["cell"]}"/>')
     for i, (d, s) in enumerate(rows):
         cy = y + i * 76
         b.append(T(36, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
         b.append(T(36, cy + 56, s[:19] + ("…" if len(s) > 19 else ""), 17, t["label"], 400, bg=t["cell"]))
         if i < len(rows) - 1:
-            b.append(f'<rect x="36" y="{cy+75.5}" width="{cw-64}" height="0.5" fill="{t["sep"]}"/>')
-    b.append(tab_bar(cw, h + 12, t))
+            b.append(f'<rect x="36" y="{cy+75.5}" width="{cw-60}" height="0.5" fill="{t["sep"]}"/>')
     return svg(w, h, t["bg"], "".join(b))
 
 
 def duo_inner(theme):
+    """Inner display, portrait. Standard horizontal bars (the portrait exception), list and
+    detail side by side. The fold runs horizontally across the middle (y = h/2): nothing
+    fixed sits on the band; the scrolling list may cross it (data-fold-ok)."""
     t = THEMES[theme]
     w, h = 669, 951
-    cw = w - 44
-    sw = 196
-    b = [duo_system_strip(w, h, t), duo_side_buttons(w, t)]
-    # Sidebar (tabs placed as a sidebar on the inner display).
-    b.append(f'<rect x="10" y="10" width="{sw}" height="{h-20}" rx="24" fill="{t["cell"]}" '
-             f'stroke="{t["glass_stroke"]}"/>')
-    b.append(T(26, 56, "ひとこと日記", 20, t["label"], 700, bg=t["cell"]))
-    items = [("book", "すべての日記", True), ("cal", "カレンダー", False), ("gear", "設定", False)]
-    for i, (sym, lab, on) in enumerate(items):
-        y = 80 + i * 50
-        col = t["accent"] if on else t["label"]
-        if on:
-            b.append(f'<rect x="20" y="{y}" width="{sw-20}" height="44" rx="12" fill="{t["accent"]}" '
-                     f'fill-opacity="0.14"/>')
-        b.append(symbol(sym, 44, y + 22, col))
-        b.append(T(66, y + 28, lab, 17, col, 600 if on else 400, bg=t["cell"]))
-    b.append(T(26, h - 34, "残り 23 件", 13, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-    # Detail beside the list collapsed into the sidebar width budget: list on top, detail below.
-    lx = sw + 28
-    lw = cw - lx - 8
-    b.append(T(lx, 60, "すべての日記", 28, t["label"], 700))
-    rows = ENTRIES[:3]
-    b.append(f'<rect x="{lx}" y="80" width="{lw}" height="{len(rows)*76}" rx="24" fill="{t["cell"]}"/>')
+    fold = h / 2
+    b = [T(32, 34, "9:41", 15, t["label"], 600),
+         f'<rect x="{w-58}" y="22" width="26" height="13" rx="4" fill="none" stroke="{t["label"]}" '
+         f'stroke-opacity="0.4"/><rect x="{w-56}" y="24" width="20" height="9" rx="2" fill="{t["label"]}"/>']
+    lx, lw = 16, 300          # list pane
+    dx = lx + lw + 16          # detail pane
+    dw = w - dx - 16
+    # Top bar: sidebar toggle + search over the list, "今日を書く" over the detail.
+    btn = lambda cx, cy: (f'<circle cx="{cx}" cy="{cy}" r="22" fill="{t["glass"]}" '
+                          f'fill-opacity="{t["glass_op"]}" stroke="{t["glass_stroke"]}"/>')
+    b.append(btn(lx + 22, 80) + f'<g fill="none" stroke="{t["label"]}" stroke-width="2">'
+             f'<rect x="{lx+11}" y="70" width="22" height="20" rx="3"/><path d="M{lx+19} 70v20"/></g>')
+    b.append(btn(lx + 72, 80) + f'<g fill="none" stroke="{t["label"]}" stroke-width="2">'
+             f'<circle cx="{lx+70}" cy="78" r="7"/><path d="M{lx+75} 83l5 5"/></g>')
+    b.append(f'<rect x="{w-140}" y="58" width="124" height="44" rx="22" fill="{t["accent"]}"/>')
+    b.append(T(w - 78, 86, "今日を書く", 17, "#FFFFFF", 600, "middle", bg=t["accent"]))
+    b.append(T(lx + 4, 148, "すべての日記", 28, t["label"], 700))
+    b.append(T(lx + 4, 176, "残り 23 件", 15, t["sec"], 400, op=t["sec_op"]))
+    # Scrolling list: allowed to cross the fold.
+    rows = ENTRIES
+    ly = 196
+    b.append(f'<g data-fold-ok="1"><rect x="{lx}" y="{ly}" width="{lw}" height="{len(rows)*76}" rx="24" '
+             f'fill="{t["cell"]}"/>')
     for i, (d, s) in enumerate(rows):
-        cy = 80 + i * 76
+        cy = ly + i * 76
         if i == 0:
             b.append(f'<rect x="{lx+8}" y="{cy+6}" width="{lw-16}" height="64" rx="18" fill="{t["accent"]}" '
                      f'fill-opacity="0.14"/>')
         b.append(T(lx + 20, cy + 31, d, 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
-        b.append(T(lx + 20, cy + 56, s[:20] + ("…" if len(s) > 20 else ""), 17, t["label"], 400, bg=t["cell"]))
-    dy = 80 + len(rows) * 76 + 36
+        b.append(T(lx + 20, cy + 56, s[:14] + ("…" if len(s) > 14 else ""), 17, t["label"], 400, bg=t["cell"]))
+    b.append('</g>')
+    # Detail: the whole card stays above the fold band.
     d, s = ENTRIES[0]
-    b.append(T(lx, dy, d, 22, t["label"], 700))
-    b.append(f'<rect x="{lx}" y="{dy+18}" width="{lw}" height="150" rx="24" fill="{t["cell"]}"/>')
-    b.append(T(lx + 20, dy + 60, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=t["cell"]))
-    b.append(T(lx + 20, dy + 88, "帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
-    b.append(T(lx + 20, dy + 144, "晴れ・午後 5:12 に記録", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(T(dx, 148, d, 28, t["label"], 700))
+    b.append(f'<rect x="{dx}" y="196" width="{dw}" height="230" rx="24" fill="{t["cell"]}"/>')
+    b.append(T(dx + 20, 238, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=t["cell"]))
+    b.append(T(dx + 20, 266, "帰りにパン屋へ寄った。", 17, t["label"], 400, bg=t["cell"]))
+    b.append(T(dx + 20, 400, "晴れ・午後 5:12 に記録", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    assert 196 + 230 < fold - 12  # keep the card clear of the fold band
+    # Below the fold: a secondary section that starts after the band.
+    b.append(T(dx, 540, "1年前の今日", 20, t["label"], 700))
+    b.append(f'<rect x="{dx}" y="556" width="{dw}" height="96" rx="24" fill="{t["cell"]}"/>')
+    b.append(T(dx + 20, 596, "前年10月24日（架空）", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(T(dx + 20, 624, "雨。駅まで歩いた。", 17, t["label"], 400, bg=t["cell"]))
     return svg(w, h, t["bg"], "".join(b))
 
 
