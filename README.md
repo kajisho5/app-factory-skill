@@ -27,11 +27,17 @@ pip install -r ~/.claude/skills/hig-design-skill/requirements.txt
 ```bash
 git clone https://github.com/kajisho5/hig-design-skill .claude/skills/hig-design-skill
 git clone https://github.com/kajisho5/design-check-skill .claude/skills/design-check-skill
+pip install -r .claude/skills/hig-design-skill/requirements.txt
 ```
 
 その他のスキル対応エージェントでは、このフォルダをそのエージェントのスキル置き場に配置してください（[Agent Skills の仕様](https://agentskills.io/specification)に準拠）。
 
-PNGの書き出しには和文の書体が必要です（Macはヒラギノで可。Linuxは Noto Sans CJK JP を入れる）。
+PNGの書き出しには Cairo 本体と和文の書体が必要です。
+
+| 環境 | Cairo | 和文の書体 |
+|---|---|---|
+| Mac | `brew install cairo` | ヒラギノ（標準で入っている） |
+| Debian / Ubuntu | `sudo apt-get install libcairo2` | `sudo apt-get install fonts-noto-cjk` |
 
 ## 使い方
 
@@ -58,10 +64,10 @@ design/
 スクリプトは単体でも使えます。
 
 ```bash
-python3 scripts/frame.py duo-inner design/mocks/iphone-duo-inner-S-01-light.svg -o design/mocks/framed-iphone-duo-inner-S-01-light.svg
-python3 scripts/frame.py pair left.svg right.svg -o pair-S-01-S-02-light.svg --caption-left "見出し" --caption-right "見出し"
-python3 scripts/export_png.py design/mocks
-python3 scripts/check_mocks.py design/mocks
+python3 ~/.claude/skills/hig-design-skill/scripts/frame.py duo-inner design/mocks/iphone-duo-inner-S-01-light.svg -o design/mocks/framed-iphone-duo-inner-S-01-light.svg
+python3 ~/.claude/skills/hig-design-skill/scripts/frame.py pair left.svg right.svg -o pair-S-01-S-02-light.svg --caption-left "見出し" --caption-right "見出し"
+python3 ~/.claude/skills/hig-design-skill/scripts/export_png.py design/mocks
+python3 ~/.claude/skills/hig-design-skill/scripts/check_mocks.py design/mocks
 ```
 
 ## できること／できないこと

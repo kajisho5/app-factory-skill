@@ -19,7 +19,9 @@ jobs:
       - name: Install fonts and Cairo
         run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk libcairo2
       - name: Install Python packages
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt pyflakes
+      - name: Lint scripts
+        run: python -m pyflakes scripts/*.py examples/hitokoto/build.py
       - name: Rebuild the example and run the checks
         run: bash examples/hitokoto/make.sh
       - name: Check SKILL.md frontmatter

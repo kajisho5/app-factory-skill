@@ -24,44 +24,49 @@ design/
     watch-ultra-S-01.svg / .png
 ```
 
-- ファイル名は `<端末>-<画面ID>-<light|dark>.svg`。端末名は `scripts/devices.py` の名前（`iphone`、`iphone-duo-outer`、`iphone-duo-inner`、`ipad-landscape`、`ipad-portrait`、`mac`、`watch-ultra` など）を使う。この名前でキャンバス寸法と書き出し倍率が決まる
+- ファイル名は `<端末>-<画面ID>-<light|dark>.svg`。Apple Watch は黒背景のみなので `-light`／`-dark` を付けない（例： `watch-ultra-S-01.svg`）。端末名は `scripts/devices.py` の名前（`iphone`、`iphone-duo-outer`、`iphone-duo-inner`、`ipad-landscape`、`ipad-portrait`、`mac`、`watch-ultra` など）を使う。この名前でキャンバス寸法と書き出し倍率が決まる
 - 完成例： `examples/hitokoto/`（架空のアプリ「ひとこと日記」）
+- 以下の `<SKILL>` は、このスキルのフォルダ（例： `~/.claude/skills/hig-design-skill`）。スクリプトは作業フォルダから `python3 <SKILL>/scripts/...` で呼ぶ
 
 ## ワークフロー
 
 1. **前提を固める** — ユーザーの説明から、アプリの目的、主な利用場面、対応プラットフォーム、画面の向きを決める。対応プラットフォームが書かれていなければ、iPhone＋iPhone Duo＋iPad を基本とし（iPhone アプリは iPhone Duo でも動くため）、Mac / Watch は利用場面に価値がある場合だけ提案する。機能の範囲やプラットフォームの追加など、ユーザーが決めるべきことは推測で埋めず、選択肢と推奨案を出す
 2. **設計書を書く** — `templates/design-spec.md` を `design/design-spec.md` にコピーして埋める。数値は `references/hig-specs.md` から取る
-   - 画面一覧とプラットフォーム別のナビゲーション（iPhoneはタブバー、iPadはタブバーかサイドバー、Macはサイドバー＋一覧＋詳細、Watchは浅い縦ページ）
+   - 画面一覧とプラットフォーム別のナビゲーション（iPhoneはタブバー、iPhone Duo は外側がタブバー・内側がサイドバー、iPadはタブバーかサイドバー、Macはサイドバー＋一覧＋詳細、Watchは浅い縦ページ）
    - 全画面の状態（空状態・読み込み中・エラー・権限拒否・無料版の上限）
    - 色はシステムカラーを基本とし、独自色はトークンとしてライト／ダークの値とコントラスト比を記録する
    - 文字は Text Styles で指定する（ポイント数を直接決めない）。アイコンは SF Symbols の名前で指定する
 3. **主要画面からモックを描く** — まず iPhone の主要画面1つをライトで描いてユーザーに見せ、方向が合っているか確認してから全体に広げる（ユーザーが「おまかせ」と言っている場合は確認せず進め、最後にまとめて見せる）
+   - **SVGは生成スクリプトで作るのを基本にする**。`<SKILL>/examples/hitokoto/build.py` を `design/build.py` にコピーし、色のトークン（ライト／ダーク）と部品（ステータスバー、タブバー、セル、ボタン）を書き換えて使う。ライトとダークを同じ部品から作るので、両モードの食い違いが起きない。画面が少なければ手書きのSVGでもよい
    - キャンバスは `references/hig-specs.md` の表のpt寸法で、ルートの `<svg>` に `width`／`height`／`viewBox` と、背景色を `data-bg` 属性で書く
    - 文字は Text Styles のサイズで組み、`font-family="-apple-system, 'SF Pro Text', 'Hiragino Sans', 'Noto Sans JP', 'Noto Sans CJK JP', sans-serif"` を指定する
    - カードやボタンの上に載る文字には、その背景色を `data-bg` で書く（コントラストの機械チェックに使う）
+   - 文字サイズと色は**属性**（`font-size="17"`、`fill="#000000"`）で書く。`<style>` のクラスで書くと機械チェックで見られない
+   - ぼかし（Liquid Glass の背景のぼけ）は PNG 書き出しで再現されないので、半透明の塗りで近似する
    - Safe Area を守る： iPhoneは上端（ステータスバーとカメラ部分）と下端（ホームインジケータ）に操作要素を置かない
    - サンプルデータは**明らかに架空**の人名・住所・電話番号・会社名・日付の内容にする（実在の人物・住所・企業・作品を使わない）
    - アイコンは設計書に SF Symbols の名前を書く。モックには、Mac の SF Symbols アプリから書き出したSVGを使えるならそれを使い、使えない環境では単純な線画で代わりに描く（SF Symbols の利用条件は SF Symbols アプリと https://developer.apple.com/sf-symbols/ で確認する）
 4. **全プラットフォーム・両モードに広げる** — 対応プラットフォームごとに主要画面をライトとダークで描く。ダークは色を反転するだけでなく、システムカラーのダーク値に置き換える
    - **iPhone Duo**（折りたたみ iPhone）： 外側（`iphone-duo-outer`、通常の iPhone と同じサイズクラス）と内側（`iphone-duo-inner`、横・縦とも regular）の両方を描く。内側はタブをサイドバーにし、サイドバー＋一覧＋詳細の構成にする。向きではなくサイズクラスで組み替える（内側はアプリの対応する向きの指定に従わない）。標準のバーのボタンはステータスバーの下に縦に並び、ステータスバーと Dynamic Island は画面の横側に来る（正確な位置は未公開なので近似で描き、設計書に「近似」と書く）。内側の Split View（画面の左右どちら側か半分）でも崩れない構成を設計書に書く。詳細は `references/hig-specs.md` の「iPhone Duo」
+   - **iPhone Duo の横向き**： アプリが横向きに対応する場合は外側の横向き（`iphone-duo-outer-landscape`）を描く。内側の横向き（`iphone-duo-inner-landscape`）は、内側の縦向きと構成が変わる場合だけ描く（テントのように立てて置かれるため、横向きの対応は推奨されている）
    - **iPad**： 横向き（`ipad-landscape`）を基本に、必要なら縦向きも描く。iPhone画面の引き伸ばしにしない
-   - **Mac**： 1440 × 900 pt のデスクトップの中にウィンドウを置き、メニューバー（アプリ名・ファイル・編集・表示・ウインドウ・ヘルプ）も描く
-   - **Apple Watch**： 一目で分かる1画面。背景は黒、文字は標準16pt以上
+   - **Mac**： 1440 × 900 pt のデスクトップの中にウィンドウを置き、メニューバー（アプリ名・ファイル・編集・表示・ウインドウ・ヘルプ）も描く。「Designed for iPad」で動かす場合は、Mac専用のUIは描かず、iPad の画面をウィンドウに入れた形で描く
+   - **Apple Watch**： 一目で分かる1画面。背景は黒、文字は標準16pt以上。常時表示（手首を下げたとき）の画面も `watch-ultra-S-01-aod.svg` として描く（個人情報や細かい数値を隠す）
    - **状態と条件のモック**（design-check-skill の C-03・C-13・C-16・I-02 に対応）： 主要画面について、少なくとも次も描く
      - 空状態： `iphone-S-01-empty-light.svg` / `-dark.svg`
      - 入力がある画面はキーボード表示時（入力欄と確定ボタンが隠れないこと）
      - 最大文字サイズ（AX5）： `iphone-S-01-light-ax5.svg`（行を省略せず縦に積む組み替えを見せる）
      - iPad の細いウィンドウ： `ipad-narrow-S-01-light.svg` / `-dark.svg`（サイドバーを畳んだ状態など）
-   - **端末フレーム**： 掲載用に枠付きの画像が欲しい場合は `scripts/frame.py iphone|duo-outer|duo-inner|ipad|mac|watch` で作り、出力名は `framed-<元の画面名>.svg` にする（スクリーンショット用の画面モックと区別するため）
-   - **2台並びの掲載用画像（pair）**： 必要なら、描いた iPhone 画面2枚から `scripts/frame.py pair` で作る（出力名は `pair-...`）。2枚は同じモード・同じ時刻・同じデータにし、一覧と詳細のように役割が分かる組み合わせにする
+   - **端末フレーム**： 掲載用に枠付きの画像が欲しい場合は `<SKILL>/scripts/frame.py iphone|duo-outer|duo-inner|ipad|mac|watch` で作り、出力名は `framed-<元の画面名>.svg` にする（スクリーンショット用の画面モックと区別するため）
+   - **2台並びの掲載用画像（pair）**： 必要なら、描いた iPhone 画面2枚から `<SKILL>/scripts/frame.py pair` で作る（出力名は `pair-...`）。2枚は同じモード・同じ時刻・同じデータにし、一覧と詳細のように役割が分かる組み合わせにする
 5. **書き出しと機械チェック** —
    ```bash
-   python3 scripts/export_png.py design/mocks      # SVG → 透過なしPNG（スクリーンショット寸法）
-   python3 scripts/check_mocks.py design/mocks     # 寸法・最小文字サイズ・コントラスト・ライト/ダークの対・PNG
+   python3 <SKILL>/scripts/export_png.py design/mocks      # SVG → 透過なしPNG（スクリーンショット寸法）
+   python3 <SKILL>/scripts/check_mocks.py design/mocks     # 寸法・最小文字サイズ・コントラスト・はみ出し・ライト/ダークの対・PNG
    ```
-   エラーが0になるまで直す。依存： `pip install cairosvg pillow`。和文の書体が入っていない環境では、PNGの日本語が表示されない（Noto Sans CJK JP かヒラギノを入れる）
+   エラーが0になるまで直し、警告も確認する。依存： `pip install -r <SKILL>/requirements.txt`（Cairo 本体が必要： Mac は `brew install cairo`、Debian/Ubuntu は `sudo apt-get install libcairo2`）。和文の書体が入っていない環境では、PNGの日本語が表示されない（Noto Sans CJK JP かヒラギノを入れる）
 6. **目で確認する** — 書き出したPNGを実際に開いて見る。機械チェックでは分からない、はみ出し・重なり・切れた文字・揃っていない余白・Safe Area への食い込みを直す
-7. **design-check-skill で監査する** — 設計書とモックを design-check-skill（kajisho5/design-check-skill）で監査し、その終了条件（観点を変えたパスで「新規の抜けゼロ」が3回連続）まで回す。結果は設計書の「監査結果」に貼る。design-check-skill が使えない環境では、`references/hig-specs.md` と設計書を1項目ずつ突き合わせる簡易チェックを行い、「design-check-skill による監査は未実施」と書く
+7. **design-check-skill で監査する** — 設計書とモックを design-check-skill（kajisho5/design-check-skill）で監査し、その終了条件（パスごとに毎回新しい観点で見直し、「新規の抜けゼロ」が3回連続）まで回す。結果は設計書の「監査結果」に貼る。design-check-skill が使えない環境では、`references/hig-specs.md` と設計書を1項目ずつ突き合わせる簡易チェックを行い、「design-check-skill による監査は未実施」と書く
 8. **渡す** — 設計書とPNGをユーザーに渡す（SVGは原版としてフォルダに残す）。スマートフォンで見る人がいるので、PNGを必ず添える。最後に、監査の結果（総パス数・保留）を1〜2行で伝える
 
 ## デザインの原則（全プラットフォーム共通）
@@ -91,5 +96,5 @@ design/
 - `scripts/devices.py` — 端末名とキャンバス寸法・倍率・最小文字サイズ
 - `scripts/frame.py` — 画面SVGを汎用の端末フレームに入れる（iPhone Duo の外側・内側を含む）。2台並びの掲載用画像（pair）を作る
 - `scripts/export_png.py` — SVG → 透過なしPNG（スクリーンショット寸法）
-- `scripts/check_mocks.py` — 寸法・最小文字サイズ・コントラスト・ライト/ダークの対・PNGの有無と透過を確認
+- `scripts/check_mocks.py` — 寸法・最小文字サイズ・コントラスト・はみ出し（警告）・`<style>` の使用（警告）・ライト/ダークの対・PNGの有無と透過を確認
 - `examples/hitokoto/` — 完成例（設計書・生成スクリプト・モック）。`bash examples/hitokoto/make.sh` で再生成と検査

@@ -9,6 +9,7 @@ Checks per SVG:
     full-canvas <rect> fill. Put data-bg="#RRGGBB" on a <g> or <text> drawn over
     buttons, cards or images so the check uses the right color.
   - text that probably runs off the canvas (rough width estimate; WARN only)
+  - <style> blocks (their rules are not checked; WARN only - use attributes instead)
   - every *-light.svg has a *-dark.svg (and vice versa)
   - a PNG exists next to it, is not older than the SVG, and has no alpha channel
 
@@ -91,6 +92,9 @@ def check_svg(path: Path, errors, warns):
     elif not path.name.startswith("framed-"):
         warns.append(f"{path}: file name does not start with a device name ({', '.join(CANVASES)}); size not checked")
     min_pt = MIN_FONT_PT[platform]
+
+    if any(local(el.tag) == "style" for el in root.iter()):
+        warns.append(f"{path}: <style> rules are not checked (font size, color); write them as attributes")
 
     page_bg = parse_color(root.get("data-bg"))
     if page_bg is None:

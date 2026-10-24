@@ -201,6 +201,12 @@ def mac(theme):
     b.append(T(lx, wy + 34, "すべての日記", 15, t["label"], 700, bg=t["win"]))
     b.append(f'<rect x="{wx+ww-44}" y="{wy+14}" width="28" height="28" rx="6" fill="{t["bar"]}"/>'
              + symbol_pencil(wx + ww - 42, wy + 16, t["accent"], 1.0))
+    # Toolbar search field (⌘F), left of the new-entry button.
+    sx = wx + ww - 236
+    b.append(f'<rect x="{sx}" y="{wy+14}" width="180" height="28" rx="8" fill="{t["bar"]}"/>'
+             f'<g fill="none" stroke="{t["sec"]}" stroke-width="1.6"><circle cx="{sx+16}" cy="{wy+27}" r="5"/>'
+             f'<path d="M{sx+20} {wy+31}l4 4"/></g>')
+    b.append(T(sx + 30, wy + 32, "検索", 13, t["sec"], 400, op=t["sec_op"], bg=t["bar"]))
     b.append(f'<rect x="{lx-8}" y="{wy+52}" width="{ww-sw-32}" height="0.5" fill="{t["sep"]}"/>')
     lw = 320
     for i, (d, s) in enumerate(ENTRIES):
@@ -229,6 +235,17 @@ def watch():
          T(22, 158, "午後 5:12", 13, "#EBEBF5", 400, op=0.6, bg="#1C1C1E"),
          f'<rect x="10" y="186" width="{w-20}" height="50" rx="25" fill="#0091FF"/>',
          T(w / 2, 217, "音声で書く", 16, "#FFFFFF", 600, "middle", bg="#0091FF")]
+    return svg(w, h, "#000000", "".join(b))
+
+
+def watch_aod():
+    """Always On (wrist down): dimmed, no diary text, only whether today is recorded."""
+    w, h = 211, 257
+    b = [T(w - 18, 28, "9:41", 15, "#AEAEB2", 600, "end"),
+         T(16, 62, "今日のひとこと", 16, "#5E9EDB", 600),
+         f'<rect x="10" y="76" width="{w-20}" height="96" rx="20" fill="#0D0D0F"/>',
+         T(22, 118, "記録済み", 22, "#AEAEB2", 600, bg="#0D0D0F"),
+         T(22, 150, "手首を上げると表示", 13, "#8E8E93", 400, bg="#0D0D0F")]
     return svg(w, h, "#000000", "".join(b))
 
 
@@ -415,6 +432,7 @@ files = {
     "mac-S-01-light.svg": mac("light"),
     "mac-S-01-dark.svg": mac("dark"),
     "watch-ultra-S-01.svg": watch(),
+    "watch-ultra-S-01-aod.svg": watch_aod(),
     "iphone-duo-outer-S-01-light.svg": duo_outer("light"),
     "iphone-duo-outer-S-01-dark.svg": duo_outer("dark"),
     "iphone-duo-inner-S-01-light.svg": duo_inner("light"),

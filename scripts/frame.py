@@ -47,8 +47,20 @@ def load_screen(path):
     return w, h, inner_tag, body
 
 
+def prefix_ids(body, prefix):
+    """Give every id in a nested screen a unique prefix so two screens in one file
+    (pair) cannot collide; browsers resolve duplicate ids to the first one."""
+    ids = set(re.findall(r'\sid="([^"]+)"', body))
+    for i in sorted(ids, key=len, reverse=True):
+        body = body.replace(f'id="{i}"', f'id="{prefix}{i}"')
+        body = body.replace(f'url(#{i})', f'url(#{prefix}{i})')
+        body = body.replace(f'href="#{i}"', f'href="#{prefix}{i}"')
+    return body
+
+
 def nest(path, x, y, scale, clip_id, radius):
     w, h, tag, body = load_screen(path)
+    body = prefix_ids(body, f"{clip_id}-")
     sw, sh = w * scale, h * scale
     tag = tag[:-1] + f' x="{x:g}" y="{y:g}" width="{sw:g}" height="{sh:g}">'
     clip = (f'<clipPath id="{clip_id}"><rect x="{x:g}" y="{y:g}" width="{sw:g}" '
