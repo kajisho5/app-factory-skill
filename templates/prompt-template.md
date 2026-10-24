@@ -9,7 +9,7 @@
 ## 共通デフォルト（全アプリ共通）
 
 ### デザイン原則
-- **Appleの Human Interface Guidelines (HIG) に必ず沿うこと。** ナビゲーション構造、タップ領域（44×44pt以上）、Safe Area、Dynamic Type、ダークモード、SF Symbolsの使い方など、HIGの規定から外れるUIを勝手に作らない。HIGと自分の判断が衝突したらHIGを優先し、その旨を報告する
+- **Appleの Human Interface Guidelines (HIG) に必ず沿うこと。** ナビゲーション構造、タップ領域（44×44pt以上）、Safe Area、Dynamic Type、ダークモード、SF Symbolsの使い方など、HIGの規定から外れるUIを勝手に作らない。HIGと自分の判断が衝突したらHIGを優先し、その旨を報告する [1]
 - iOS標準の見た目と操作感を基本とし、独自UIは必要最小限にする
 - **画面の向き**: iPhoneは縦向き（ポートレート）基本で固定し、回転対応しない。iPadは回転と画面分割（Split View / Stage Manager）に対応し、ウィンドウサイズが変わってもレイアウトが崩れないようにする。例外（写真・動画系など横向きが自然なものはiPhoneでも回転対応）は候補ごとに指定する
 - **iPhoneの操作性**: 片手操作を想定し、主要アクションは画面の下部〜中部に配置する。シート（ハーフモーダル）の開閉操作は全画面で一貫させる
@@ -19,10 +19,10 @@
 - **起動画面**: Launch Screenはシンプルにし、広告・ロゴアニメ・待機演出を入れない。起動したらすぐ操作できる状態にする
 
 ### アプリアイコン
-- アイコンは **fresnel**（Liquid Glassアイコン作成ツール。例： kajisho5/fresnel。無い場合は任意のレイヤードアイコン作成手段でよい）を使って作成する
+- アイコンは **fresnel**（Liquid Glassアイコン作成ツール。例： kajisho5/fresnel。無い場合は任意のレイヤードアイコン作成手段でよい）を使って作成する [5][6]
 - iOSの **Liquid Glass** スタイルのレイヤードアイコン（.iconバンドル）とし、必要な全サイズ・全プラットフォーム分を書き出す
-- ライト／ダーク／ティントの外観バリアントも用意する
-- アイコンデザインもHIGのアイコン指針に従う（文字を入れない、シンプルなグリフ、など）
+- ライト／ダーク／クリア／ティントの外観バリアントも用意する
+- アイコンデザインもHIGのアイコン指針に従う（文字を入れない、シンプルなグリフ、など）[2]
 
 ### 品質・標準対応
 - **ダークモード**: 色はアセットカタログで定義し、ライト／ダーク両モードで表示を確認する
@@ -30,7 +30,7 @@
 - **アクセシビリティ**: 主要な操作要素にVoiceOverラベルを付け、テキストと背景のコントラスト比を確保する
 - **ローカライズ前提**: UI文字列はハードコードせず String Catalogs（.xcstrings）で管理する（初期言語は日本語）
 - **権限拒否・空状態**: 権限が拒否された場合の代替導線（設定アプリへの誘導を含む）と、データが空の状態の画面を必ず用意する
-- **プライバシーマニフェスト**: PrivacyInfo.xcprivacy を用意し、必須理由APIの申告を済ませる
+- **プライバシーマニフェスト**: PrivacyInfo.xcprivacy を用意し、必須理由APIの申告を済ませる [4]
 - **データ保持**: ユーザーデータはアプリのコンテナに保存してiCloudバックアップ対象とし、アップデートや機種変更でデータが消えない設計にする
 - **無料版の制限の事前明示**: 無料版に件数や機能の制限がある場合、その制限はユーザーがぶつかる前に画面上で明示する（残り件数の表示など）。制限到達時の挙動（古いデータがどうなるか等）も明示し、無言でデータを削除しない
 
@@ -46,9 +46,10 @@
 ### 作業環境・リポジトリ
 - 成果物はGitHubの新規パブリックリポジトリで管理し、工程ごとにコミットしてプッシュする
 - リポジトリは後日プライベートに変更する前提のため、APIキー・証明書・個人情報などの秘密情報は絶対にコミットしない（キーは .gitignore 済みのローカル設定や環境変数で扱い、手順をREADMEに書く）
+- 提出用ビルドは、その時点で最新のXcodeと現行のiOS SDKで作成する（提出要件は変わるため、提出前に最新の要件を確認する）
 
 ### 審査・法務
-- **ガイドライン4.3（スパム）対策**: テンプレートや部品を使い回しても、各アプリの機能・UI・訴求が実質的に異なるものにし、そのアプリ固有の価値を実装と掲載文の両方で明確にする。違いの分からない類似アプリを連続して提出しない
+- **ガイドライン4.3（スパム）対策**: テンプレートや部品を使い回しても、各アプリの機能・UI・訴求が実質的に異なるものにし、そのアプリ固有の価値を実装と掲載文の両方で明確にする。違いの分からない類似アプリを連続して提出しない [3]
 - **商標と表現**: アプリ名・タイトル・サブタイトル・キーワード欄・説明文に、競合他社の名称・商標・製品名を使わない。根拠のない最上級表現や誇大表現（「No.1」「最速」「完全無料」など）を使わない
 - **申告と実装の一致**: プライバシーラベル等の申告内容と実装を一致させる。申告と異なるデータ収集が必要になった場合は、勝手に実装せず報告する
 
@@ -64,6 +65,15 @@
 - README.md（ビルド手順、差し替えが必要な定数の一覧、App Store Connect側で必要な作業のチェックリスト： IAP商品登録、プライバシーポリシーURLの用意、プライバシーラベルの入力）
 - 動作確認レポート（主要フロー／権限拒否時／データ空時／ダークモード／Dynamic Type最大サイズ／iPadの回転・分割表示を、実機またはシミュレータで確認した結果）
 - App Store掲載文の下書き（タイトル30字以内、サブタイトル30字以内、説明文）
+
+### 出典・参考（共通デフォルトの根拠）
+
+1. Apple Human Interface Guidelines — Accessibility（タップ領域・コントラスト等の基準値）: https://developer.apple.com/design/human-interface-guidelines/accessibility
+2. Apple Human Interface Guidelines — App Icons: https://developer.apple.com/design/human-interface-guidelines/app-icons
+3. App Store Review Guidelines（§4.3 Spam）: https://developer.apple.com/app-store/review/guidelines/
+4. Apple Developer Documentation — Privacy manifest files: https://developer.apple.com/documentation/bundleresources/privacy-manifest-files
+5. Apple Human Interface Guidelines — Materials（Liquid Glass）: https://developer.apple.com/design/human-interface-guidelines/materials
+6. fresnel（アイコン作成ツール）: https://github.com/kajisho5/fresnel
 
 ## アプリ固有部分（候補ごとに差し替え）
 

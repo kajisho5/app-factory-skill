@@ -17,17 +17,18 @@ App StoreのQRリーダー系アプリは、無料に見せて高額な週額サ
 - 履歴の保存は SwiftData
 - 課金は StoreKit 2、非消耗型のアプリ内課金1点のみ
 - Xcodeでそのまま開いてビルドできる形で納品すること（XcodeGenの project.yml 方式でも可。その場合は生成手順をREADMEに明記）
+- 提出用ビルドは、その時点で最新のXcodeと現行のiOS SDKで作成すること（提出要件は変わるため、提出前に最新の要件を確認する）
 - UIは日本語。コード内の識別子とコメントは英語
-- **UIデザインはAppleの Human Interface Guidelines (HIG) に必ず沿うこと。** タップ領域（44×44pt以上）、Safe Area、Dynamic Type、ダークモード、SF Symbolsの使い方など、HIGから外れるUIを勝手に作らない。HIGと自分の判断が衝突したらHIGを優先し、その旨を報告する
+- **UIデザインはAppleの Human Interface Guidelines (HIG) に必ず沿うこと。** タップ領域（44×44pt以上）、Safe Area、Dynamic Type、ダークモード、SF Symbolsの使い方など、HIGから外れるUIを勝手に作らない。HIGと自分の判断が衝突したらHIGを優先し、その旨を報告する [1]
 - iOS標準の見た目と操作感を基本とし、独自UIは必要最小限にする
 - 画面の向き: iPhoneは縦向き固定（回転対応しない）。iPadは回転・画面分割（Split View / Stage Manager）に対応し、レイアウトが崩れないこと
-- 標準対応（必須）: ダークモード（色はアセットカタログで定義し、両モードで表示確認）／ Dynamic Type（最大文字サイズでもレイアウトが崩れない）／ 主要操作へのVoiceOverラベルとコントラスト比の確保 ／ UI文字列は String Catalogs（.xcstrings）で管理しハードコードしない ／ 権限拒否時の代替導線（設定アプリへの誘導）とデータ空状態の画面を用意する ／ プライバシーマニフェスト（PrivacyInfo.xcprivacy）を用意し必須理由APIを申告する ／ 履歴データはiCloudバックアップ対象とし、アップデートや機種変更で消えない設計にする
+- 標準対応（必須）: ダークモード（色はアセットカタログで定義し、両モードで表示確認）／ Dynamic Type（最大文字サイズでもレイアウトが崩れない）／ 主要操作へのVoiceOverラベルとコントラスト比の確保 ／ UI文字列は String Catalogs（.xcstrings）で管理しハードコードしない ／ 権限拒否時の代替導線（設定アプリへの誘導）とデータ空状態の画面を用意する ／ プライバシーマニフェスト（PrivacyInfo.xcprivacy）を用意し必須理由APIを申告する [4] ／ 履歴データはiCloudバックアップ対象とし、アップデートや機種変更で消えない設計にする
 - 追加の標準対応: 入力時はソフトウェアキーボードで入力項目や確定ボタンを隠さない ／ 起動画面はシンプルにし、広告・ロゴアニメ・待機演出を入れない ／ iPhoneでは主要アクションを画面の下部〜中部に置き、シートの開閉操作を一貫させる ／ iPadでは画面幅を活かしたレイアウト（履歴はサイドバー＋詳細など）にし、ポインタとハードウェアキーボードに対応する
 
 ## 機能仕様
 
 ### 1. スキャン（AVFoundation）
-- 対応コード: QR / EAN-13 / EAN-8 / UPC-E / Code 39 / Code 93 / Code 128 / ITF-14 / PDF417 / Aztec / DataMatrix
+- 対応コード: QR / EAN-13 / EAN-8 / UPC-E / Code 39 / Code 93 / Code 128 / Interleaved 2 of 5 / ITF-14 / PDF417 / Aztec / DataMatrix（いずれもAVFoundationが標準で検出できる種別）
 - 起動したら即スキャン可能（トップ画面やチュートリアルを挟まない）
 - ライト（トーチ）ON/OFF、写真ライブラリの画像からの読み取り
 - 連続スキャンモード（同じコードを二重に記録しない）
@@ -35,12 +36,12 @@ App StoreのQRリーダー系アプリは、無料に見せて高額な週額サ
 
 ### 2. 結果表示
 - 種類を判定して表示: URL / Wi-Fi接続情報 / 連絡先（vCard）/ メール / 電話 / SMS / 地図座標 / プレーンテキスト
-- 種類に応じたアクション: URLを開く、Wi-Fiに接続、連絡先に追加、コピー、共有
+- 種類に応じたアクション: URLを開く、Wi-Fiに接続（NEHotspotConfigurationを使う。必要なCapabilityを有効化すること）、連絡先に追加、コピー、共有
 - URLは開く前に全文を表示する（ドメインだけ見せて誤タップさせるような真似はしない）
 
 ### 3. 履歴（SwiftData）
 - スキャン・作成の両方を自動保存。日時・種類・内容で検索、種類でフィルタ
-- お気に入り、削除（単体・全件）、CSVエクスポート
+- お気に入り、削除（単体・全件）、CSVエクスポート（内容にカンマ・改行・引用符が含まれても壊れないよう、RFC 4180形式でクォートすること）
 
 ### 4. QR作成
 - テキスト / URL / Wi-Fi / 連絡先 / カレンダーイベント からQRコード生成（CoreImage）
@@ -76,11 +77,11 @@ App StoreのQRリーダー系アプリは、無料に見せて高額な週額サ
 2. 以後は ①スキャン ②履歴 ③QR作成 ④課金 ⑤仕上げ の順に実装し、各ステップでビルドが通ることを確認してから次へ進む
 3. 工数が逼迫した場合は、QR作成の対応種類（カレンダーイベント→連絡先の順）→ CSVエクスポート → お気に入り の順に後回しにしてよい。ただしスキャン・結果表示・履歴の保存と検索は削らない
 4. 仕様に書いていない判断が必要になったら、勝手に範囲を広げず、選択肢と推奨案を提示して確認する
-5. App Store審査では、既存QRリーダーの焼き直しではなく本アプリ固有の価値（課金まわりの透明性と、広告なし・買い切りの分かりやすさ）が伝わるよう、実装と掲載文の両方で差別化を明確にすること（審査ガイドライン4.3対策）
+5. App Store審査では、既存QRリーダーの焼き直しではなく本アプリ固有の価値（課金まわりの透明性と、広告なし・買い切りの分かりやすさ）が伝わるよう、実装と掲載文の両方で差別化を明確にすること（審査ガイドライン4.3対策）[3]
 
 ## アイコンとデモモック
 
-- アプリアイコンは **kajisho5/fresnel**（Liquid Glassアイコン作成ツール、GitHub: kajisho5/fresnel）で作成し、iOSの **Liquid Glass** スタイルのレイヤードアイコン（.iconバンドル）として、iPhone / iPadの必要サイズを全て書き出す。ライト／ダーク／ティントの外観バリアントも用意する。デザインはHIGのアイコン指針に従う（文字を入れない、シンプルなグリフ）
+- アプリアイコンは **kajisho5/fresnel**（Liquid Glassアイコン作成ツール、GitHub: kajisho5/fresnel）[6] で作成し、iOSの **Liquid Glass** スタイルのレイヤードアイコン（.iconバンドル）として、iPhone / iPadの必要サイズを全て書き出す。ライト／ダーク／クリア／ティントの外観バリアントも用意する。デザインはHIGのアイコン指針に従う（文字を入れない、シンプルなグリフ）[2][5]
 - デモ用の画面モックを用意する: **iPhone / iPad / iPhone Duo（iPhone 2台並び）**。本アプリはMac版がないためMacモックは不要。主要画面を実機フレームで表示し、App Store掲載素材に転用できる品質にする
 - アイコンの書き出しとモックは、SVG原版に加えて **PNGプレビューを必ず添えること**（確認はiPhoneで行うため、SVGだけでは見られない）
 - iPhone Duoは2画面の状態（時刻・データ・選択状態・ライト／ダーク）を一致させ、役割分担が分かる並びにすること。端末のサイズ・角度・余白を揃えること
@@ -95,3 +96,12 @@ App StoreのQRリーダー系アプリは、無料に見せて高額な週額サ
 - 最後に、App Store掲載文の下書き（タイトル30字以内、サブタイトル30字以内、説明文）。「広告なし・サブスクなし・買い切り」を正直に訴求する文面にし、競合他社の名称・商標は使わないこと
 
 タイトル案: 誠実QRリーダー - 広告なし・買い切り
+
+## 出典・参考
+
+1. Apple Human Interface Guidelines — Accessibility: https://developer.apple.com/design/human-interface-guidelines/accessibility
+2. Apple Human Interface Guidelines — App Icons: https://developer.apple.com/design/human-interface-guidelines/app-icons
+3. App Store Review Guidelines（§4.3 Spam）: https://developer.apple.com/app-store/review/guidelines/
+4. Apple Developer Documentation — Privacy manifest files: https://developer.apple.com/documentation/bundleresources/privacy-manifest-files
+5. Apple Human Interface Guidelines — Materials（Liquid Glass）: https://developer.apple.com/design/human-interface-guidelines/materials
+6. fresnel（アイコン作成ツール）: https://github.com/kajisho5/fresnel
