@@ -1,22 +1,26 @@
 # app-factory-skill
 
-アプリ量産ダッシュボードのパイプライン候補（低評価の競合アプリと、その低評価レビューの不満の内訳を分析した候補リスト）から次に作るアプリを選び、開発担当のAI（Claude等）に渡す「開発プロンプト」を作成するためのAgent Skillです。
+Appleの Human Interface Guidelines（HIG）に沿って、**iPhone / iPhone Duo / iPad / Mac / Apple Watch** のアプリ画面をデザインするAgent Skillです。アプリのアイデアや仕様を渡すと、デザイン設計書と、ライト／ダーク両方のSVGモック＋PNGプレビューを作ります。
 
-- 候補の選定： 需要の証明、不満の集中度、推定開発日数、シーズンの締切、共通部品の系統（審査ガイドライン4.3対策）から根拠つきで提案する
-- プロンプト生成： 共通テンプレートを構成ごと使い、共通デフォルト（HIG準拠、サイズクラスとリサイズ対応、アクセシビリティ、課金の誠実さ、審査ガイドライン4.3への配慮、架空データのモックなど）をすべて含んだ、そのまま貼れる開発プロンプトを作る
-- デザイン監査： 生成したプロンプトを [design-check-skill](https://github.com/kajisho5/design-check-skill) で監査し、抜けを直す
-- 対応プラットフォーム： iPhone / iPad / Mac / Apple Watch（候補の `platforms` 列に合わせてテンプレートのブロックを取捨）
+![iPhone Duo の完成例（架空のアプリ「ひとこと日記」）](examples/hitokoto/mocks/iphone-duo-S-01-S-02-light.png)
+
+- **設計書**： 画面一覧、プラットフォーム別のナビゲーション、全画面の状態（空・エラー・権限拒否・無料版の上限）、色と文字のトークン、SF Symbols、アクセシビリティ
+- **モック**： キャンバスは App Store のスクリーンショット寸法に合わせてあり、PNGはそのまま掲載用に使える（透過なし）
+- **機械チェック**： キャンバス寸法、最小文字サイズ、文字のコントラスト、ライト／ダークの対、PNGの有無
+- **監査**： 仕上げに [design-check-skill](https://github.com/kajisho5/design-check-skill) で、新規の抜けゼロが3パス連続するまで監査する
+- サンプルデータは架空のものだけを使う
 
 ## インストール
 
-**Claude Code（個人用）** — design-check-skill と一緒に入れるのがおすすめです。
+**Claude Code（個人用）** — design-check-skill と一緒に入れます。
 
 ```bash
 git clone https://github.com/kajisho5/app-factory-skill ~/.claude/skills/app-factory-skill
 git clone https://github.com/kajisho5/design-check-skill ~/.claude/skills/design-check-skill
+pip install cairosvg pillow
 ```
 
-**Claude Code（プロジェクト用）** — 候補CSVのあるリポジトリ直下で：
+**Claude Code（プロジェクト用）** — リポジトリ直下で：
 
 ```bash
 git clone https://github.com/kajisho5/app-factory-skill .claude/skills/app-factory-skill
@@ -25,81 +29,81 @@ git clone https://github.com/kajisho5/design-check-skill .claude/skills/design-c
 
 その他のスキル対応エージェントでは、このフォルダをそのエージェントのスキル置き場に配置してください（[Agent Skills の仕様](https://agentskills.io/specification)に準拠）。
 
-## できること／できないこと
-
-できること：
-- パイプライン候補からの次作の提案と選定（シーズンものは今日の日付から締切を逆算）
-- 共通テンプレート＋候補固有の仕様で埋めた開発プロンプトの作成・自己点検・保存・受け渡し
-- 作成したプロンプトのデザイン抜け監査（design-check-skill併用時。無い場合は簡易チェックを行い、その旨を報告）
-- 共通デフォルトを変更した際の、既存プロンプト向け差分の提示
-
-できないこと：
-- アプリ本体の実装（実装はプロンプトを受け取った開発担当AIの仕事です）
-- ダッシュボードや候補CSVの書き換え（状態管理はダッシュボード側。このスキルは状態を進める案内まで）
-- App Store審査の通過保証（ガイドラインへの配慮はプロンプトに含めますが、審査結果を保証するものではありません）
-- 公開後の問い合わせ対応やレビュー返信の文面作成
+PNGの書き出しには和文の書体が必要です（Macはヒラギノで可。Linuxは Noto Sans CJK JP を入れる）。
 
 ## 使い方
 
-1. 候補リスト（CSV）をエージェントが読める場所に置く（後述「前提条件」）
-2. 依頼する。例：
-   - 「パイプラインから次のアプリを選んで」
-   - 「No.○ のプロンプトを作って」
-   - 「共通デフォルトに○○を追加して」
-3. 生成物： プロンプトは作業フォルダ配下の `<アプリのslug>/prompt.md` に保存され、ファイルとして渡されます。そのプロンプトを開発担当のAIに貼れば実装が始まります
-4. プロンプトを渡した後は、ダッシュボード側で候補の状態を進めてください（候補→仕様→開発中…）
+依頼の例：
 
-## 前提条件
+- 「家計簿アプリの画面を iPhone と iPad でデザインして」
+- 「この仕様のアプリを HIG に沿ってモックにして。Mac と Watch も」
+- 「App Store に載せるスクショ用のモックを作って。iPhone Duo も」
 
-- **候補リスト（CSV）**： 1行＝1候補で、少なくとも次の情報を持つCSV： 対象競合アプリ名とURL、競合の評価と評価数、低評価レビューの不満内訳、差別化の切り口、推定開発日数、シーズン、市場、対応プラットフォーム。共通部品の系統（`template_family`）があると4.3対策の判断に使えます。列の意味と使い方は SKILL.md の「情報源」の表を参照（列名は手元の形式に合わせて読み替えます）
-- **ダッシュボード相当のもの**： 候補の状態（候補・仕様・開発中・審査中・公開・保守・撤退）を管理する場所。スプレッドシートやカンバンでも構いません
-- **開発担当のAI／エージェント**： 生成したプロンプトを渡して実装させる相手
-- 具体例： 元の環境では kajisho5/app-factory-dashboard がダッシュボードにあたります
+できあがるもの：
+
+```
+design/
+  design-spec.md
+  mocks/
+    iphone-S-01-light.svg / .png   … 各画面 × ライト／ダーク
+    iphone-duo-S-01-S-02-light.png … 2台並びの提示用
+    ipad-landscape-S-01-light.png
+    mac-S-01-light.png
+    watch-ultra-S-01.png
+```
+
+スクリプトは単体でも使えます。
+
+```bash
+python3 scripts/frame.py duo left.svg right.svg -o duo.svg --caption-left "見出し" --caption-right "見出し"
+python3 scripts/export_png.py design/mocks
+python3 scripts/check_mocks.py design/mocks
+```
+
+## できること／できないこと
+
+できること：
+- HIGに沿った画面設計とモック制作（iPhone / iPhone Duo / iPad / Mac / Apple Watch、ライト／ダーク）
+- App Store のスクリーンショット寸法でのPNG書き出し
+- 寸法・文字サイズ・コントラストの機械チェックと、design-check-skill による監査
+
+できないこと：
+- アプリのコード実装
+- 実在の人物・住所・企業・他社アプリの画面を使ったモック
+- Appleの実機を精密に描いた端末フレーム（同梱のフレームは汎用の角丸形状です）
 
 ## ファイル構成
 
-- `SKILL.md` — ワークフロー、候補CSVの列の使い方、共通デフォルトの要点、出典
-- `templates/prompt-template.md` — プロンプトの雛形（共通デフォルトの文言の正本。アプリ固有部分の差し替え枠と、Mac / Watch のプラットフォーム別ブロックを含む）
-- `examples/` — 作成済みプロンプトの実例2本（後述）
+- `SKILL.md` — ワークフローとデザインの原則
+- `references/hig-specs.md` — キャンバス寸法、Text Styles、コントロール、コントラスト、色の近似値、ナビゲーションの型（出典つき）
+- `templates/design-spec.md` — 設計書の雛形
+- `scripts/` — `devices.py`（端末と寸法）、`frame.py`（端末フレーム・iPhone Duo）、`export_png.py`（PNG書き出し）、`check_mocks.py`（機械チェック）
+- `examples/hitokoto/` — 完成例（架空のアプリ「ひとこと日記」）
 - `LICENSE` — MIT License
-
-## 自分の環境に合わせる箇所
-
-- 候補CSVの置き場所と列名
-- プロンプトの保存先フォルダ（SKILL.md の手順5）
-- アイコン作成手段（Icon Composer か fresnel）
-- デザイン監査に使う design-check-skill の参照先
-- 量産ペースと、状態管理で使う状態の呼び名
-- 課金の基本形（ここでは広告なし・サブスクなし・買い切りを既定にしています）
-- HIGより厳しい自社ルール（アイコンの全外観を自前で用意、アイコンへの文字入れ禁止、PNGプレビュー必須、モックは架空データのみ）
-
-## 実例（examples/）
-
-- `examples/seijitsu-qr-prompt.md` — 「誠実QRリーダー」（QR／バーコードリーダー、iPhone / iPad）
-- `examples/atena-print-prompt.md` — 「宛名印刷 はがき・封筒」（iPhone / iPad / Mac は Designed for iPad）
-
-どちらも元の環境で作成したプロンプトを、現在のテンプレートの構成と共通デフォルトに合わせて更新したものです。アプリ名やリポジトリ名（seijitsu-qr-reader、atena-print等）は具体名のまま残しています。自分の環境では、アプリ固有部分の具体性の基準として参照し、そのままコピーして使わないでください。
 
 ## よくある質問
 
-**Q. このスキルがアプリを作ってくれるのですか？**
-A. いいえ。作るのは「開発プロンプト」までです。実装は、そのプロンプトを渡した別のAI（または人間）が行います。
+**Q. 寸法の根拠は？**
+A. キャンバスは App Store Connect のスクリーンショット仕様（ピクセル）を端末の倍率で割ったものです。文字・コントロール・コントラストは HIG の Typography と Accessibility の値です。`references/hig-specs.md` に出典と確認日があります。
 
-**Q. 候補リストはこの形式でないとダメですか？**
-A. 列名は読み替えますが、「競合の評価・評価数・不満の内訳・切り口・推定開発日数・シーズン・市場・プラットフォーム」の情報自体がないと、選定の根拠が作れません。
+**Q. 色の値は正確ですか？**
+A. モックに書く色は近似値です。HIGは色見本を画像で載せているため、正確な値は Apple Design Resources で確認してください。実装ではシステムカラーを使う前提で、設計書にはシステムカラーの名前を書きます。
 
-**Q. 不満の内訳の数字は「件数」ですか？**
-A. 元の環境のCSV（`top_complaints(低評価レビュー語数)`）はキーワードの言及数で、レビュー件数ではありません。プロンプトでは「言及数」と書きます。
+**Q. 「iPhone Duo」とは？**
+A. iPhone を2台並べた提示用の画像です（Appleの用語ではありません）。一覧と詳細、操作前と操作後のように、2画面の役割が分かる組み合わせで作ります。
 
-**Q. なぜ「公開リポジトリで開始」にしているのですか？**
-A. 元の運用の都合です（後日プライベートに変更する前提で、秘密情報をコミットしないことを徹底する設計）。社内完結の運用なら、最初からプライベートにしてもワークフローは変わりません。
+**Q. design-check-skill は必須ですか？**
+A. 推奨です。無い環境では簡易チェックで代え、設計書に「監査は未実施」と書きます。
 
-**Q. 課金の基本形（買い切り）は変えられますか？**
-A. 変えられます。ただしこのスキルは「切り口が課金への不満である候補」を扱う前提で、隠れたサブスクや誤認させる課金導線を禁止する項目を含んでいます。基本形を変える場合は、その禁止項目の扱いも併せて見直してください。
+## 出典
+
+- [Apple Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines)
+- [Screenshot specifications（App Store Connect）](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications)
+- [Apple Design Resources](https://developer.apple.com/design/resources/)
 
 ## 関連プロジェクト
 
-- [design-check-skill](https://github.com/kajisho5/design-check-skill) — デザインの抜け監査。このスキルと併用します
+- [design-check-skill](https://github.com/kajisho5/design-check-skill) — デザインの抜け監査（このスキルの仕上げに使います）
 - [fresnel](https://github.com/kajisho5/fresnel) — Liquid Glass アイコン作成ツール
 
 ## ライセンス
