@@ -34,7 +34,7 @@ ENTRIES = [
 def one(s, n):
     """List row: line breaks become spaces, then cut to n characters with an ellipsis."""
     s = s.replace("\n", " ")
-    return s[:n] + ("…" if len(s) > n else "")
+    return s[:n].rstrip() + "…" if len(s) > n else s
 
 
 def T(x, y, s, size, fill, weight=400, anchor="start", op=None, bg=None, font=None):
@@ -682,8 +682,9 @@ def iphone_permission(theme):
              f'<path d="M{w/2-10} 356a10 10 0 0 0 20 0"/></g>')
     b.append(f'<circle cx="{w/2+30}" cy="276" r="11" fill="{t["accent"]}" stroke="{t["bg"]}" stroke-width="4"/>')  # badge
     b.append(T(w / 2, 420, "書き忘れをお知らせします", 28, t["label"], 700, "middle"))
-    b.append(T(w / 2, 462, "毎晩、その日のひとことがまだのときに", 17, t["label"], 400, "middle"))
-    b.append(T(w / 2, 488, "1回だけ通知します。時刻は設定で変えられます。", 17, t["label"], 400, "middle"))
+    # Wrapped inside the 20pt side margins.
+    for k, line in enumerate(("毎晩、その日のひとことがまだの", "ときに1回だけ通知します。", "時刻は設定で変えられます。")):
+        b.append(T(w / 2, 462 + 26 * k, line, 17, t["label"], 400, "middle"))
     b.append(f'<rect x="20" y="{h-130}" width="{w-40}" height="54" rx="27" fill="{t["accent"]}"/>')
     b.append(T(w / 2, h - 96, "続ける", 17, "#FFFFFF", 600, "middle", bg=t["accent"]))
     b.append(f'<rect x="{w/2-70}" y="{h-13}" width="140" height="5" rx="2.5" fill="{t["label"]}"/>')
@@ -706,6 +707,67 @@ def watch_ax3():
     return svg(w, h, "#000000", "".join(b))
 
 
+def mac_calendar(theme):
+    """S-05 on Mac (native): UICalendarView is not available on macOS, so a custom month grid.
+    Written days have a dot (shape, not colour only); days after today are not selectable."""
+    t = THEMES[theme]
+    w, h = 1440, 900
+    b = [f'<rect x="0" y="0" width="{w}" height="26" fill="{t["bar"]}" fill-opacity="0.9"/>',
+         T(20, 18, "ひとこと日記", 13, t["label"], 700, bg=t["bar"])]
+    for x, m in ((130, "ファイル"), (196, "編集"), (240, "表示"), (284, "ウインドウ"), (364, "ヘルプ")):
+        b.append(T(x, 18, m, 13, t["label"], 400, bg=t["bar"]))
+    b.append(T(w - 20, 18, "10月24日(土) 9:41", 13, t["label"], 400, "end", bg=t["bar"]))
+    wx, wy, ww, wh = 150, 90, 1140, 720
+    b.append(f'<rect x="{wx}" y="{wy}" width="{ww}" height="{wh}" rx="16" fill="{t["win"]}" stroke="{t["glass_stroke"]}"/>')
+    sw = 240
+    b.append(f'<rect x="{wx+8}" y="{wy+8}" width="{sw}" height="{wh-16}" rx="12" fill="{t["side"]}"/>')
+    for i, c in enumerate(("#FF5F57", "#FEBC2E", "#28C840")):
+        b.append(f'<circle cx="{wx+28+i*20}" cy="{wy+28}" r="6" fill="{c}"/>')
+    b.append(f'<g aria-label="サイドバー" fill="none" stroke="{t["label"]}" stroke-width="1.5"><rect x="{wx+sw-30}" y="{wy+20}" width="18" height="16" rx="3"/>'
+             f'<path d="M{wx+sw-24} {wy+20}v16"/></g>')
+    for i, (sym, lab, on) in enumerate((("book", "すべての日記", False), ("cal", "カレンダー", True))):
+        y = wy + 64 + i * 32
+        rowbg = mix(t["accent"], t["side"], 0.16) if on else t["side"]
+        if on:
+            b.append(f'<rect x="{wx+16}" y="{y}" width="{sw-16}" height="28" rx="6" fill="{rowbg}"/>')
+        b.append(symbol(sym, wx + 34, y + 14, t["accent"]).replace('stroke-width="2"', 'stroke-width="1.6"'))
+        b.append(T(wx + 52, y + 19, lab, 13, t["label"], 600 if on else 400, bg=rowbg))
+    gx = wx + sw + 40
+    b.append(T(gx, wy + 26, "カレンダー", 13, t["label"], 700, bg=t["win"]))
+    b.append(T(gx, wy + 43, "残り 23件（無料版は 30件まで）", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
+    b.append(f'<rect x="{gx-8}" y="{wy+52}" width="{ww-sw-56}" height="0.5" fill="{t["sep"]}"/>')
+    b.append(T(gx, wy + 100, "2026年10月", 22, t["label"], 700, bg=t["win"]))
+    # previous / next month (28pt controls)
+    for k, d in enumerate(("M5 -6l-6 6 6 6", "M-5 -6l6 6-6 6")):
+        cx = wx + ww - 96 + k * 40
+        b.append(f'<rect x="{cx-14}" y="{wy+78}" width="28" height="28" rx="6" fill="{t["bar"]}"/>'
+                 f'<path transform="translate({cx} {wy+92})" d="{d}" fill="none" stroke="{t["label"]}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>')
+    cw, ch = 116, 84
+    gy = wy + 130
+    for k, d in enumerate("日月火水木金土"):
+        b.append(T(gx + k * cw + cw / 2, gy, d, 11, t["sec"], 600, "middle", op=t["sec_op"], bg=t["win"]))
+    written = {3, 7, 12, 15, 18, 20, 21, 22, 23, 24}
+    first = 4  # 1 Oct 2026 is a Thursday
+    for day in range(1, 32):
+        idx = first + day - 1
+        col, row = idx % 7, idx // 7
+        cx = gx + col * cw + cw / 2
+        cy = gy + 30 + row * ch
+        if day == 24:
+            b.append(f'<circle cx="{cx}" cy="{cy}" r="18" fill="{mix(t["accent"], t["win"], 0.16)}" stroke="{t["accent"]}" stroke-width="1.5"/>')
+            bg = mix(t["accent"], t["win"], 0.16)
+        else:
+            bg = t["win"]
+        future = day > 24
+        if future:
+            b.append(T(cx, cy + 5, str(day), 13, t["sec"], 400, "middle", op=t["sec_op"], bg=bg))
+        else:
+            b.append(T(cx, cy + 5, str(day), 13, t["label"], 600 if day == 24 else 400, "middle", bg=bg))
+        if day in written:
+            b.append(f'<circle cx="{cx}" cy="{cy+26}" r="3.5" fill="{t["accent"]}"/>')
+    return svg(w, h, t["desk"], "".join(b))
+
+
 files = {
     "iphone-S-01-light.svg": iphone_list("light"),
     "iphone-S-01-dark.svg": iphone_list("dark"),
@@ -715,6 +777,8 @@ files = {
     "ipad-landscape-S-01-dark.svg": ipad("dark"),
     "mac-S-01-light.svg": mac("light"),
     "mac-S-01-dark.svg": mac("dark"),
+    "mac-S-05-light.svg": mac_calendar("light"),
+    "mac-S-05-dark.svg": mac_calendar("dark"),
     "watch-ultra-S-07.svg": watch(),
     "watch-ultra-S-07-aod.svg": watch_aod(),
     "iphone-duo-outer-S-01-light.svg": duo_outer("light"),
