@@ -740,13 +740,14 @@ def mac_calendar(theme):
     # previous / next month (28pt controls)
     for k, d in enumerate(("M5 -6l-6 6 6 6", "M-5 -6l6 6-6 6")):
         cx = wx + ww - 96 + k * 40
+        op = ' stroke-opacity="0.3"' if k == 1 else ""  # next month is disabled in the current month
         b.append(f'<rect x="{cx-14}" y="{wy+78}" width="28" height="28" rx="6" fill="{t["bar"]}"/>'
-                 f'<path transform="translate({cx} {wy+92})" d="{d}" fill="none" stroke="{t["label"]}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>')
+                 f'<path transform="translate({cx} {wy+92})" d="{d}" fill="none" stroke="{t["label"]}"{op} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>')
     cw, ch = 116, 84
     gy = wy + 130
     for k, d in enumerate("日月火水木金土"):
         b.append(T(gx + k * cw + cw / 2, gy, d, 11, t["sec"], 600, "middle", op=t["sec_op"], bg=t["win"]))
-    written = {3, 7, 12, 15, 18, 20, 21, 22, 23, 24}
+    written = {12, 18, 20, 21, 22, 23, 24}  # 7 entries = 「残り 23件」
     first = 4  # 1 Oct 2026 is a Thursday
     for day in range(1, 32):
         idx = first + day - 1
