@@ -750,7 +750,7 @@ def mac_calendar(theme):
     # previous / next month (28pt controls)
     for k, d in enumerate(("M5 -6l-6 6 6 6", "M-5 -6l6 6-6 6")):
         cx = gx + 7 * cw - 58 + k * 44  # 16pt between 28pt buttons so the 44pt hit areas do not overlap
-        op = ' stroke-opacity="0.3"' if k == 1 else ""  # next month is disabled in the current month
+        op = ' stroke-opacity="0.3"'  # both disabled: all entries are in this month (first month = this month)
         b.append(f'<rect x="{cx-14}" y="{wy+78}" width="28" height="28" rx="6" fill="{t["bar"]}"/>'
                  f'<path transform="translate({cx} {wy+92})" d="{d}" fill="none" stroke="{t["label"]}"{op} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>')
     gy = wy + 130
