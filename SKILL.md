@@ -1,6 +1,6 @@
 ---
 name: hig-design-skill
-description: 'Design Apple-platform app interfaces that follow the Human Interface Guidelines: from an app idea or spec, produce a design spec (screens, navigation per platform, states, color and type tokens, SF Symbols, accessibility) and SVG mockups with PNG previews for iPhone, iPhone Duo (the foldable iPhone: outer and inner displays), iPad, Mac and Apple Watch, in light and dark. Canvas sizes match App Store screenshot specs; scripts frame devices, export opaque PNGs and check canvas size, minimum text size and contrast; the result is audited with design-check-skill until three consecutive passes find no new gaps. Uses only fictional sample data. Does not write app code. Use when the user asks to design, mock up or lay out screens for an iPhone, iPhone Duo, iPad, Mac or Apple Watch app, or for HIG-compliant app mockups or App Store screenshot mocks.'
+description: 'Design Apple-platform app interfaces that follow the Human Interface Guidelines: from an app idea or spec, produce a design spec (screens, navigation per platform, states, color and type tokens, SF Symbols, accessibility) and SVG mockups with PNG previews for iPhone, iPhone Duo (the foldable iPhone: outer and inner displays), iPad, Mac and Apple Watch, in light and dark. Canvas sizes match App Store screenshot specs; scripts frame devices, export opaque PNGs and check canvas size, minimum text size and contrast; the result is audited with design-check-skill until three consecutive passes find no new serious gaps. Uses only fictional sample data. Does not write app code. Use when the user asks to design, mock up or lay out screens for an iPhone, iPhone Duo, iPad, Mac or Apple Watch app, or for HIG-compliant app mockups or App Store screenshot mocks.'
 ---
 
 # hig-design-skill
@@ -81,7 +81,7 @@ design/
    ```
    エラーが0になるまで直し、警告も確認する。依存： `pip install -r <SKILL>/requirements.txt`（Cairo 本体が必要： Mac は `brew install cairo`、Debian/Ubuntu は `sudo apt-get install libcairo2`）。和文の書体が入っていない環境では、PNGの日本語が表示されない（Noto Sans CJK JP かヒラギノを入れる）
 6. **目で確認する** — 書き出したPNGを実際に開いて見る。機械チェックでは分からない、はみ出し・重なり・切れた文字・揃っていない余白・Safe Area への食い込みを直す
-7. **design-check-skill で監査する** — 設計書とモックを design-check-skill（kajisho5/design-check-skill）で監査し、その終了条件（パスごとに毎回新しい観点で見直し、「新規の抜けゼロ」が3回連続）まで回す。結果は設計書の「監査結果」に貼る。design-check-skill が使えない環境では、`references/hig-specs.md` と設計書を1項目ずつ突き合わせる簡易チェックを行い、「design-check-skill による監査は未実施」と書く。監査で「モックがない」「モックが決まりに反する」という抜けが出たら、手順3〜6に戻ってこのスキルで描き直し、`export_png.py` と `check_mocks.py` をやり直してから監査を続ける（design-check-skill はデザインを新しく描かない）。監査は、できればデザインを描いた担当とは別の担当（別のエージェントなど）に頼む（自分の成果物を自分で採点すると見落とすため）。各パスで抜けと判定した項目IDと根拠を記録し、後から確かめられるようにする
+7. **design-check-skill で監査する** — 設計書とモックを design-check-skill（kajisho5/design-check-skill）で監査し、その終了条件（パスごとに毎回新しい観点で見直し、「新規の重大な抜けゼロ」が3回連続）まで回す。結果は設計書の「監査結果」に貼る。design-check-skill が使えない環境では、`references/hig-specs.md` と設計書を1項目ずつ突き合わせる簡易チェックを行い、「design-check-skill による監査は未実施」と書く。監査で「モックがない」「モックが決まりに反する」という抜けが出たら、手順3〜6に戻ってこのスキルで描き直し、`export_png.py` と `check_mocks.py` をやり直してから監査を続ける（design-check-skill はデザインを新しく描かない）。監査は、できればデザインを描いた担当とは別の担当（別のエージェントなど）に頼む（自分の成果物を自分で採点すると見落とすため）。各パスで抜けと判定した項目IDと根拠を記録し、後から確かめられるようにする
 8. **渡す** — 設計書とPNGをユーザーに渡す（SVGは原版としてフォルダに残す）。スマートフォンで見る人がいるので、PNGを必ず添える。最後に、監査の結果（総パス数・保留）を1〜2行で伝える
 
 ## デザインの原則（全プラットフォーム共通）
