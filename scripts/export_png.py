@@ -5,7 +5,7 @@ Screen mocks named after a canvas in devices.py (e.g. iphone-S-01-light.svg) are
 at that canvas's scale, so the PNG matches the App Store screenshot size. Other SVGs
 (framed compositions, Duo) are exported at --scale (default 2).
 PNGs are flattened onto an opaque background because App Store screenshots must not
-contain transparency.
+contain transparency, and carry an embedded sRGB profile (HIG: Images).
 
 Usage: export_png.py FILE_OR_DIR [...] [--scale 2] [--bg "#FFFFFF"]
 Requires: pip install cairosvg pillow
@@ -22,9 +22,11 @@ from devices import CANVASES, canvas_for  # noqa: E402
 
 try:
     import cairosvg
-    from PIL import Image
+    from PIL import Image, ImageCms
 except ImportError:
     sys.exit("missing dependency: pip install cairosvg pillow")
+
+SRGB_ICC = ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB")).tobytes()
 
 
 _FAMILIES = {}
@@ -74,7 +76,8 @@ def export(svg: Path, default_scale: float, bg: str):
     flat = Image.new("RGB", img.size, bg)
     flat.paste(img, mask=img.split()[3])
     out = svg.with_suffix(".png")
-    flat.save(out, optimize=True)
+    # HIG Images: embed a color profile and do not interlace (PIL writes non-interlaced PNGs).
+    flat.save(out, optimize=True, icc_profile=SRGB_ICC)
     note = ""
     if name and name != "pair":
         w, h, s, _ = CANVASES[name]

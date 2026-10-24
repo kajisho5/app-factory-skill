@@ -11,6 +11,7 @@ from xml.sax.saxutils import escape
 OUT = Path(__file__).resolve().parent / "mocks"
 OUT.mkdir(exist_ok=True)
 FONT = "-apple-system, 'SF Pro Text', 'Hiragino Sans', 'Noto Sans JP', 'Noto Sans CJK JP', sans-serif"
+WATCH_FONT = "'SF Compact Text', 'SF Compact Rounded', 'Hiragino Sans', 'Noto Sans JP', 'Noto Sans CJK JP', sans-serif"
 
 THEMES = {
     "light": dict(bg="#F2F2F7", cell="#FFFFFF", label="#000000", sec="#3C3C43", sec_op=0.8,
@@ -30,10 +31,10 @@ ENTRIES = [
 ]
 
 
-def T(x, y, s, size, fill, weight=400, anchor="start", op=None, bg=None):
+def T(x, y, s, size, fill, weight=400, anchor="start", op=None, bg=None, font=None):
     o = f' opacity="{op}"' if op is not None else ""
     b = f' data-bg="{bg}"' if bg else ""
-    return (f'<text x="{x}" y="{y}" font-family="{FONT}" font-size="{size}" font-weight="{weight}" '
+    return (f'<text x="{x}" y="{y}" font-family="{font or FONT}" font-size="{size}" font-weight="{weight}" '
             f'fill="{fill}" text-anchor="{anchor}"{o}{b}>{escape(s)}</text>')
 
 
@@ -69,6 +70,20 @@ def status_bar(w, t):
               f'stroke-opacity="0.4"/><rect x="{w-60}" y="27" width="20" height="9" rx="2" fill="{t["label"]}"/>')
 
 
+def symbol_filled(kind, cx, cy, c):
+    """Filled stand-ins: iOS tab bars use the .fill variant of SF Symbols."""
+    if kind == "book":
+        return (f'<rect x="{cx-9}" y="{cy-10}" width="18" height="20" rx="2" fill="{c}"/>'
+                f'<rect x="{cx-4.5}" y="{cy-10}" width="1.5" height="20" fill="#FFFFFF" fill-opacity="0.6"/>')
+    if kind == "cal":
+        return (f'<rect x="{cx-10}" y="{cy-9}" width="20" height="18" rx="3" fill="{c}"/>'
+                f'<rect x="{cx-10}" y="{cy-4}" width="20" height="1.5" fill="#FFFFFF" fill-opacity="0.6"/>')
+    if kind == "gear":
+        return (f'<circle cx="{cx}" cy="{cy}" r="9" fill="{c}"/>'
+                f'<circle cx="{cx}" cy="{cy}" r="3.5" fill="#FFFFFF" fill-opacity="0.7"/>')
+    return ""
+
+
 def tab_bar(w, h, t, active=0):
     # Floating Liquid Glass tab bar: navigation only, symbol + one-word label per tab.
     bw, bh = w - 2 * 21, 62
@@ -82,7 +97,7 @@ def tab_bar(w, h, t, active=0):
         if i == active:
             parts.append(f'<rect x="{cx-52}" y="{y+5}" width="104" height="{bh-10}" rx="26" '
                          f'fill="{t["accent"]}" fill-opacity="0.12"/>')
-        parts.append(symbol(sym, cx, y + 22, col))
+        parts.append(symbol_filled(sym, cx, y + 22, col))
         parts.append(T(cx, y + 50, lab, 11, col, 600, "middle", bg=t["glass"]))
     return "".join(parts)
 
@@ -226,26 +241,33 @@ def mac(theme):
 
 
 def watch():
+    """Apple Watch Ultra (49mm): xLarge is the default size -> Body 17pt, Footnote 1 14pt.
+    System font is SF Compact."""
     w, h = 211, 257
-    b = [T(w - 18, 28, "9:41", 15, "#FFFFFF", 600, "end"),
-         T(16, 62, "今日のひとこと", 16, "#0091FF", 600),
-         f'<rect x="10" y="76" width="{w-20}" height="96" rx="20" fill="#1C1C1E"/>',
-         T(22, 106, "公園の銀杏が", 16, "#FFFFFF", 400, bg="#1C1C1E"),
-         T(22, 130, "色づいてきた。", 16, "#FFFFFF", 400, bg="#1C1C1E"),
-         T(22, 158, "午後 5:12", 13, "#EBEBF5", 400, op=0.6, bg="#1C1C1E"),
+    W = dict(font=WATCH_FONT)
+    b = [T(w - 18, 28, "9:41", 15, "#FFFFFF", 600, "end", **W),
+         T(16, 62, "今日のひとこと", 17, "#0091FF", 600, **W),
+         f'<rect x="10" y="74" width="{w-20}" height="100" rx="20" fill="#1C1C1E"/>',
+         T(22, 104, "公園の銀杏が", 17, "#FFFFFF", 400, bg="#1C1C1E", **W),
+         T(22, 128, "色づいてきた。", 17, "#FFFFFF", 400, bg="#1C1C1E", **W),
+         T(22, 158, "午後 5:12", 14, "#EBEBF5", 400, op=0.6, bg="#1C1C1E", **W),
          f'<rect x="10" y="186" width="{w-20}" height="50" rx="25" fill="#0091FF"/>',
-         T(w / 2, 217, "音声で書く", 16, "#FFFFFF", 600, "middle", bg="#0091FF")]
+         T(w / 2, 217, "音声で書く", 17, "#FFFFFF", 600, "middle", bg="#0091FF", **W)]
     return svg(w, h, "#000000", "".join(b))
 
 
 def watch_aod():
-    """Always On (wrist down): dimmed, no diary text, only whether today is recorded."""
+    """Always On (wrist down): same layout, supporting parts dimmed, the diary text (private)
+    hidden, the button kept but shown as non-interactive."""
     w, h = 211, 257
-    b = [T(w - 18, 28, "9:41", 15, "#AEAEB2", 600, "end"),
-         T(16, 62, "今日のひとこと", 16, "#5E9EDB", 600),
-         f'<rect x="10" y="76" width="{w-20}" height="96" rx="20" fill="#0D0D0F"/>',
-         T(22, 118, "記録済み", 22, "#AEAEB2", 600, bg="#0D0D0F"),
-         T(22, 150, "手首を上げると表示", 13, "#8E8E93", 400, bg="#0D0D0F")]
+    W = dict(font=WATCH_FONT)
+    b = [T(w - 18, 28, "9:41", 15, "#AEAEB2", 600, "end", **W),
+         T(16, 62, "今日のひとこと", 17, "#5E9EDB", 600, **W),
+         f'<rect x="10" y="74" width="{w-20}" height="100" rx="20" fill="#0D0D0F"/>',
+         T(22, 116, "記録済み", 20, "#AEAEB2", 600, bg="#0D0D0F", **W),
+         T(22, 158, "午後 5:12", 14, "#8E8E93", 400, bg="#0D0D0F", **W),
+         f'<rect x="10" y="186" width="{w-20}" height="50" rx="25" fill="none" stroke="#3A3A3C" stroke-width="1.5"/>',
+         T(w / 2, 217, "音声で書く", 17, "#8E8E93", 600, "middle", bg="#000000", **W)]
     return svg(w, h, "#000000", "".join(b))
 
 
@@ -296,9 +318,12 @@ def ipad_narrow(theme):
     t = THEMES[theme]
     w, h = 600, 1032
     b = [T(24, 34, "9:41", 15, t["label"], 600)]
-    b.append(f'<circle cx="44" cy="80" r="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
-             f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><rect x="33" y="70" width="22" height="20" rx="3"/>'
-             f'<path d="M41 70v20"/></g>')
+    # Window controls (approximation) sit at the leading edge of the toolbar when windowed.
+    for k, c in enumerate(("#FF5F57", "#FEBC2E", "#28C840")):
+        b.append(f'<circle cx="{30 + k * 20}" cy="80" r="6" fill="{c}"/>')
+    b.append(f'<circle cx="120" cy="80" r="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
+             f'<g fill="none" stroke="{t["label"]}" stroke-width="2"><rect x="109" y="70" width="22" height="20" rx="3"/>'
+             f'<path d="M117 70v20"/></g>')
     b.append(f'<circle cx="{w-44}" cy="80" r="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
              + symbol_pencil(w - 56, 68, t["accent"]))
     b.append(T(24, 150, "すべての日記", 34, t["label"], 700))
@@ -323,17 +348,19 @@ def iphone_compose(theme):
     b.append(T(20, 150, "日記", 34, t["label"], 700))
     b.append(f'<rect width="{w}" height="{h}" fill="{dim}" fill-opacity="{0.25 if theme == "light" else 0.5}"/>')
     sy = 300
-    b.append(f'<rect x="8" y="{sy}" width="{w-16}" height="{h-sy+40}" rx="38" fill="{t["cell"]}"/>')
+    sheet = t["cell"] if theme == "light" else "#1C1C1E"   # dark: elevated surface
+    field = t["bg"] if theme == "light" else "#2C2C2E"     # dark: elevated secondary
+    b.append(f'<rect x="8" y="{sy}" width="{w-16}" height="{h-sy+40}" rx="38" fill="{sheet}"/>')
     b.append(f'<rect x="{w/2-18}" y="{sy+8}" width="36" height="5" rx="2.5" fill="{t["sep"]}"/>')
-    b.append(f'<rect x="24" y="{sy+26}" width="96" height="44" rx="22" fill="{t["bg"]}"/>')
-    b.append(T(72, sy + 54, "キャンセル", 15, t["label"], 400, "middle", bg=t["bg"]))
-    b.append(T(w / 2, sy + 54, "10月24日（土）", 17, t["label"], 600, "middle", bg=t["cell"]))
+    b.append(f'<rect x="24" y="{sy+26}" width="96" height="44" rx="22" fill="{field}"/>')
+    b.append(T(72, sy + 54, "キャンセル", 15, t["label"], 400, "middle", bg=field))
+    b.append(T(w / 2, sy + 54, "10月24日（土）", 17, t["label"], 600, "middle", bg=sheet))
     b.append(f'<rect x="{w-104}" y="{sy+26}" width="80" height="44" rx="22" fill="{t["accent"]}"/>')
     b.append(T(w - 64, sy + 54, "保存", 17, "#FFFFFF", 600, "middle", bg=t["accent"]))
-    b.append(f'<rect x="24" y="{sy+90}" width="{w-48}" height="120" rx="16" fill="{t["bg"]}"/>')
-    b.append(T(40, sy + 124, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=t["bg"]))
+    b.append(f'<rect x="24" y="{sy+90}" width="{w-48}" height="120" rx="16" fill="{field}"/>')
+    b.append(T(40, sy + 124, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=field))
     b.append(f'<rect x="250" y="{sy+108}" width="2" height="22" fill="{t["accent"]}"/>')
-    b.append(T(w - 40, sy + 196, "13 / 60文字", 13, t["sec"], 400, "end", op=t["sec_op"], bg=t["bg"]))
+    b.append(T(w - 40, sy + 196, "13 / 60文字", 13, t["sec"], 400, "end", op=t["sec_op"], bg=field))
     ky = h - 300
     kb = "#D1D3D9" if theme == "light" else "#2C2C2E"
     b.append(f'<rect x="0" y="{ky}" width="{w}" height="300" fill="{kb}"/>')
@@ -369,7 +396,7 @@ def duo_side_column(w, h, t, active=0):
         if k == active:
             parts.append(f'<rect x="{x+6}" y="{cy-27}" width="40" height="54" rx="20" fill="{t["accent"]}" '
                          f'fill-opacity="0.12"/>')
-        parts.append(symbol(sym, cx, cy, col))
+        parts.append(symbol_filled(sym, cx, cy, col))
     return "".join(parts)
 
 

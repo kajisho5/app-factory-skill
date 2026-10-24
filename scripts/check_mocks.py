@@ -14,7 +14,7 @@ Checks per SVG:
     when partially folded (zero width when fully open). Mark scrolling text/lists with data-fold-ok
   - <style> blocks (their rules are not checked; WARN only - use attributes instead)
   - every *-light.svg has a *-dark.svg (and vice versa)
-  - a PNG exists next to it, is not older than the SVG, and has no alpha channel
+  - a PNG exists next to it, is not older than the SVG, has no alpha channel and has a color profile
 
 Usage: check_mocks.py DIR_OR_FILES...   (exit code 1 if any ERROR)
 """
@@ -181,6 +181,8 @@ def check_svg(path: Path, errors, warns):
             with Image.open(png) as im:
                 if im.mode in ("RGBA", "LA") or "transparency" in im.info:
                     errors.append(f"{png}: has an alpha channel (App Store screenshots must be opaque)")
+                if "icc_profile" not in im.info:
+                    warns.append(f"{png}: no embedded color profile (HIG: Images); re-export with export_png.py")
         except ImportError:
             warns.append("pillow not installed; PNG alpha not checked")
 
