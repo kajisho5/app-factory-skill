@@ -367,7 +367,9 @@ def watch_aod():
          T(22, 116, "書いた", 20, "#AEAEB2", 600, bg="#0D0D0F", **W),
          T(22, 158, "午後 5:12", 14, "#8E8E93", 400, bg="#0D0D0F", **W),
          f'<rect x="10" y="186" width="{w-20}" height="50" rx="25" fill="none" stroke="#3A3A3C" stroke-width="1.5"/>',
-         T(w / 2, 217, "音声で書く", 17, "#8E8E93", 600, "middle", bg="#000000", **W)]
+         '<g fill="none" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"><rect x="34" y="200" width="9" height="15" rx="4.5"/>'
+         '<path d="M30 210a8.5 8.5 0 0 0 17 0M38.5 219v3"/></g>',
+         T(w / 2 + 12, 217, "音声で書く", 17, "#8E8E93", 600, "middle", bg="#000000", **W)]
     return svg(w, h, "#000000", "".join(b))
 
 
@@ -473,11 +475,11 @@ def iphone_compose(theme):
     # Weather (optional): four symbol buttons; the selected one is filled and has a round tint.
     b.append(T(24, sy + 250, "天気", 15, t["sec"], 400, op=t["sec_op"], bg=sheet))
     wy = sy + 290
-    sel = mix(t["accent"], sheet, 0.18)
+    sel = t["accent"]  # selected: white filled symbol on an accent circle
     for k in range(4):
         cxk = 46 + k * 60
         b.append(f'<circle cx="{cxk}" cy="{wy}" r="22" fill="{sel if k == 0 else field}"/>')
-        col = t["accent"] if k == 0 else t["label"]
+        col = "#FFFFFF" if k == 0 else t["label"]
         b.append([sun(cxk, wy, col, True), cloud(cxk, wy, col), cloud(cxk, wy - 3, col, "rain"), snow(cxk, wy, col)][k])
     ky = h - 300
     kb = "#D1D3D9" if theme == "light" else "#2C2C2E"
@@ -736,13 +738,14 @@ def mac_calendar(theme):
     b.append(T(gx, wy + 43, "残り 25件（無料版は 30件まで）", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
     b.append(f'<rect x="{gx-8}" y="{wy+52}" width="{ww-sw-56}" height="0.5" fill="{t["sep"]}"/>')
     b.append(T(gx, wy + 100, "2026年10月", 22, t["label"], 700, bg=t["win"]))
+    detw = 300  # detail column on the right (S-02 for the selected day)
+    cw, ch = (ww - sw - 56 - detw - 24) / 7, 84
     # previous / next month (28pt controls)
     for k, d in enumerate(("M5 -6l-6 6 6 6", "M-5 -6l6 6-6 6")):
-        cx = wx + ww - 96 + k * 40
+        cx = gx + 7 * cw - 58 + k * 44  # 16pt between 28pt buttons so the 44pt hit areas do not overlap
         op = ' stroke-opacity="0.3"' if k == 1 else ""  # next month is disabled in the current month
         b.append(f'<rect x="{cx-14}" y="{wy+78}" width="28" height="28" rx="6" fill="{t["bar"]}"/>'
                  f'<path transform="translate({cx} {wy+92})" d="{d}" fill="none" stroke="{t["label"]}"{op} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>')
-    cw, ch = 116, 84
     gy = wy + 130
     for k, d in enumerate("日月火水木金土"):
         b.append(T(gx + k * cw + cw / 2, gy, d, 11, t["sec"], 600, "middle", op=t["sec_op"], bg=t["win"]))
@@ -753,18 +756,25 @@ def mac_calendar(theme):
         col, row = idx % 7, idx // 7
         cx = gx + col * cw + cw / 2
         cy = gy + 30 + row * ch
-        if day == 24:
-            b.append(f'<circle cx="{cx}" cy="{cy}" r="18" fill="{mix(t["accent"], t["win"], 0.16)}" stroke="{t["accent"]}" stroke-width="1.5"/>')
-            bg = mix(t["accent"], t["win"], 0.16)
-        else:
-            bg = t["win"]
         future = day > 24
-        if future:
-            b.append(T(cx, cy + 5, str(day), 13, t["sec"], 400, "middle", op=t["sec_op"], bg=bg))
+        selected = day == 20
+        if selected:  # selected day: filled accent circle, white Semibold number
+            b.append(f'<circle cx="{cx}" cy="{cy}" r="18" fill="{t["accent"]}"/>')
+            b.append(T(cx, cy + 5, str(day), 13, "#FFFFFF", 600, "middle", bg=t["accent"]))
         else:
-            b.append(T(cx, cy + 5, str(day), 13, t["label"], 600 if day == 24 else 400, "middle", bg=bg))
+            if day == 24:  # today: accent ring only
+                b.append(f'<circle cx="{cx}" cy="{cy}" r="18" fill="none" stroke="{t["accent"]}" stroke-width="1.5"/>')
+            b.append(T(cx, cy + 5, str(day), 13, t["sec"] if future else t["label"], 600 if day == 24 else 400,
+                       "middle", op=t["sec_op"] if future else None, bg=t["win"]))
         if day in written:
             b.append(f'<circle cx="{cx}" cy="{cy+26}" r="3.5" fill="{t["accent"]}"/>')
+    # Detail column: the selected day's entry.
+    dxx = wx + ww - detw - 16
+    b.append(f'<rect x="{dxx-12}" y="{wy+52}" width="0.5" height="{wh-60}" fill="{t["sep"]}"/>')
+    b.append(T(dxx, wy + 96, "10月20日（火）", 22, t["label"], 700, bg=t["win"]))
+    b.append(T(dxx, wy + 136, "久しぶりにカレーを作った。", 13, t["label"], 400, bg=t["win"]))
+    b.append(T(dxx, wy + 154, "少し辛すぎた。", 13, t["label"], 400, bg=t["win"]))
+    b.append(weather_line(dxx, wy + 184, t, 11, t["win"]))
     return svg(w, h, t["desk"], "".join(b))
 
 
