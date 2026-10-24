@@ -246,8 +246,8 @@ def watch():
     w, h = 211, 257
     W = dict(font=WATCH_FONT)
     b = [T(w - 18, 28, "9:41", 15, "#FFFFFF", 600, "end", **W),
-         T(16, 62, "今日のひとこと", 17, "#0091FF", 600, **W),
-         f'<rect x="10" y="74" width="{w-20}" height="100" rx="20" fill="#1C1C1E"/>',
+         T(w - 18, 52, "今日のひとこと", 17, "#0091FF", 600, "end", **W),
+         f'<rect x="10" y="66" width="{w-20}" height="108" rx="20" fill="#1C1C1E"/>',
          T(22, 104, "公園の銀杏が", 17, "#FFFFFF", 400, bg="#1C1C1E", **W),
          T(22, 128, "色づいてきた。", 17, "#FFFFFF", 400, bg="#1C1C1E", **W),
          T(22, 158, "午後 5:12", 14, "#EBEBF5", 400, op=0.6, bg="#1C1C1E", **W),
@@ -262,8 +262,8 @@ def watch_aod():
     w, h = 211, 257
     W = dict(font=WATCH_FONT)
     b = [T(w - 18, 28, "9:41", 15, "#AEAEB2", 600, "end", **W),
-         T(16, 62, "今日のひとこと", 17, "#5E9EDB", 600, **W),
-         f'<rect x="10" y="74" width="{w-20}" height="100" rx="20" fill="#0D0D0F"/>',
+         T(w - 18, 52, "今日のひとこと", 17, "#5E9EDB", 600, "end", **W),
+         f'<rect x="10" y="66" width="{w-20}" height="108" rx="20" fill="#0D0D0F"/>',
          T(22, 116, "記録済み", 20, "#AEAEB2", 600, bg="#0D0D0F", **W),
          T(22, 158, "午後 5:12", 14, "#8E8E93", 400, bg="#0D0D0F", **W),
          f'<rect x="10" y="186" width="{w-20}" height="50" rx="25" fill="none" stroke="#3A3A3C" stroke-width="1.5"/>',
@@ -339,7 +339,7 @@ def ipad_narrow(theme):
 
 
 def iphone_compose(theme):
-    """S-03: new entry in a sheet (medium detent, grabber, Cancel / prominent Save).
+    """S-03: new entry in a sheet (medium detent, grabber, xmark Cancel / filled checkmark Save).
     The input sits above the keyboard so it is never covered (C-16)."""
     t = THEMES[theme]
     w, h = 402, 874
@@ -352,11 +352,15 @@ def iphone_compose(theme):
     field = t["bg"] if theme == "light" else "#2C2C2E"     # dark: elevated secondary
     b.append(f'<rect x="8" y="{sy}" width="{w-16}" height="{h-sy+40}" rx="38" fill="{sheet}"/>')
     b.append(f'<rect x="{w/2-18}" y="{sy+8}" width="36" height="5" rx="2.5" fill="{t["sep"]}"/>')
-    b.append(f'<rect x="24" y="{sy+26}" width="96" height="44" rx="22" fill="{field}"/>')
-    b.append(T(72, sy + 54, "キャンセル", 15, t["label"], 400, "middle", bg=field))
+    # iOS 26 sheet buttons are round symbol buttons: xmark (Cancel) leading, filled checkmark (Done) trailing
+    cx, cy = 46, sy + 48
+    b.append(f'<g aria-label="キャンセル"><circle cx="{cx}" cy="{cy}" r="22" fill="{field}"/>'
+             f'<path d="M{cx-7} {cy-7}l14 14M{cx+7} {cy-7}l-14 14" stroke="{t["label"]}" stroke-width="2.4" stroke-linecap="round"/></g>')
     b.append(T(w / 2, sy + 54, "10月24日（土）", 17, t["label"], 600, "middle", bg=sheet))
-    b.append(f'<rect x="{w-104}" y="{sy+26}" width="80" height="44" rx="22" fill="{t["accent"]}"/>')
-    b.append(T(w - 64, sy + 54, "保存", 17, "#FFFFFF", 600, "middle", bg=t["accent"]))
+    cx = w - 46
+    b.append(f'<g aria-label="保存"><circle cx="{cx}" cy="{cy}" r="22" fill="{t["accent"]}"/>'
+             f'<path d="M{cx-8} {cy+1}l5 6l11 -13" fill="none" stroke="#FFFFFF" stroke-width="2.6" '
+             f'stroke-linecap="round" stroke-linejoin="round"/></g>')
     b.append(f'<rect x="24" y="{sy+90}" width="{w-48}" height="120" rx="16" fill="{field}"/>')
     b.append(T(40, sy + 124, "公園の銀杏が色づいてきた。", 17, t["label"], 400, bg=field))
     b.append(f'<rect x="250" y="{sy+108}" width="2" height="22" fill="{t["accent"]}"/>')

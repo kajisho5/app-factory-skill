@@ -10,6 +10,8 @@
 - 掲載用画像：＜2台並び（pair）や端末フレーム付きの画像を作るか＞
 - 画面の向き：＜例： iPhoneは縦固定、iPadは全方向＞
 - 判断原則（迷ったときの優先順位）：＜例： 標準の見た目 ＞ 片手操作 ＞ 情報量＞
+- HIG のデザイン原則（Purpose・Agency・Responsibility・Familiarity・Flexibility・Simplicity・Craft・Delight）のうち、このアプリで特に重視するもの：＜＞
+- 照合に使った Apple Design Resources の UI Kit の版：＜例： iOS / iPadOS 27（Figma）＞
 - 起動画面：＜例： 最初の画面の骨格だけ（文字なし・ライト／ダーク別）。ロゴアニメ・広告なし。起動後に表示する画面＞
 - 文言の管理：＜例： すべて String Catalogs で管理する前提＞
 - アプリアイコン：＜作る ／ この設計の範囲外＞
