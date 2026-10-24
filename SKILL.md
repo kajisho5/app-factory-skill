@@ -25,7 +25,13 @@ description: 'Generate build prompts for mass-produced App Store apps (iPhone/iP
 
 ### デザイン
 - **Appleの Human Interface Guidelines (HIG) に必ず沿う**。HIGと実装側の判断が衝突したらHIGを優先し、その旨を報告させる
+- iOS標準の見た目と操作感を基本とし、独自UIは必要最小限にする
 - **画面の向き**: iPhoneは縦向き固定（回転対応しない）。iPadは回転と画面分割（Split View / Stage Manager）に対応し、サイズ変更でレイアウトが崩れないこと。例外（写真・動画系など横が自然なもの）は候補ごとに指定
+- iPhoneは片手操作を想定し、主要アクションは画面の下部〜中部に配置。シートの開閉操作は全画面で一貫させる
+- iPadは画面幅を活かしたレイアウト（サイドバー＋詳細など）にし、ポインタのホバーとハードウェアキーボードの主要ショートカットに対応する
+- Mac対応アプリでは標準のメニューバー・主要ショートカット・ウィンドウのリサイズ追従を用意する。「Designed for iPad」で動作させる場合はその方針を明記し、Mac専用UIは作らない
+- ソフトウェアキーボード表示時に、入力中の項目や確定ボタンが隠れないようにする
+- 起動画面（Launch Screen）はシンプルにし、広告・ロゴアニメ・待機演出を入れない
 
 ### 品質・標準対応
 - ダークモード（色はアセットカタログ定義、両モードで確認）
@@ -42,8 +48,8 @@ description: 'Generate build prompts for mass-produced App Store apps (iPhone/iP
 - 無料お試し・期間限定価格など誤認させる表現、作業の佳境（印刷直前など）で課金画面を挟む導線を明示的に禁止する
 
 ### アイコンとモック
-- アプリアイコンは **kajisho5/fresnel**（Liquid Glassアイコン作成ツール）で作成し、iOSの Liquid Glass スタイルのレイヤードアイコン (.icon) にする。ライト／ダーク／ティントの外観バリアントも用意
-- デモモックは **iPhone / iPad / Mac / iPhone Duo（iPhone 2台並び）**。ただしアプリの対応プラットフォーム分のみ（Mac版のないアプリにMacモックは不要）
+- アプリアイコンは **kajisho5/fresnel**（Liquid Glassアイコン作成ツール）で作成し、iOSの Liquid Glass スタイルのレイヤードアイコン (.icon) にする。必要な全サイズを書き出し、ライト／ダーク／ティントの外観バリアントも用意。デザインはHIGのアイコン指針に従う（文字を入れない、シンプルなグリフ）
+- デモモックは **iPhone / iPad / Mac / iPhone Duo（iPhone 2台並び）**。ただしアプリの対応プラットフォーム分のみ（Mac版のないアプリにMacモックは不要）。主要画面を実機フレームで表示し、App Store掲載素材に転用できる品質にする。iPhone Duoは2画面の状態を一致させ、役割分担が分かる並びにする
 - **視覚成果物はSVG原版に加えてPNGプレビューを必ず添える**。ユーザーは基本iPhoneで確認しており、SVGは表示できない
 
 ### リポジトリと進め方
