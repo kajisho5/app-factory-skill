@@ -181,7 +181,7 @@ def iphone_list(theme):
     b.append(f'<circle cx="{w-38}" cy="84" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
              f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(w - 50, 72, t["accent"]))
     b.append(T(20, 150, "日記", 34, t["label"], 700))
-    b.append(T(20, 180, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(20, 180, "残り 23件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     y = 204
     b.append(f'<rect x="16" y="{y}" width="{w-32}" height="{len(ENTRIES)*76}" rx="26" fill="{t["cell"]}"/>')
     for i, (d, s) in enumerate(ENTRIES):
@@ -240,7 +240,7 @@ def ipad(theme):
     lx = sw + 36
     lw = 400
     b.append(T(lx, 104, "すべての日記", 34, t["label"], 700))
-    b.append(T(lx, 132, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(lx, 132, "残り 23件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     b.append(f'<rect x="{lx}" y="148" width="{lw}" height="{len(ENTRIES)*76}" rx="26" fill="{t["cell"]}"/>')
     for i, (d, s) in enumerate(ENTRIES):
         cy = 148 + i * 76
@@ -254,9 +254,9 @@ def ipad(theme):
     sx = w - 28 - 250
     b.append(f'<circle cx="{sx-34}" cy="76" r="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
              + symbol_pencil(sx - 46, 64, t["accent"]))
-    eb, ew = text_btn(sx - 34 - 22 - 8 - 66, 54, "編集", t, fill=t["cell"])
+    b.append(trash_btn(sx - 34 - 22 - 8 - 22, 76, t, fill=t["cell"]))
+    eb, ew = text_btn(sx - 34 - 22 - 8 - 44 - 8 - 66, 54, "編集", t, fill=t["cell"])
     b.append(eb)
-    b.append(trash_btn(sx - 34 - 22 - 8 - 66 - 8 - 22, 76, t, fill=t["cell"]))
     b.append(f'<rect x="{sx}" y="54" width="250" height="44" rx="22" fill="{t["cell"]}" stroke="{t["glass_stroke"]}"/>'
              f'<g fill="none" stroke="{t["sec"]}" stroke-width="2"><circle cx="{sx+24}" cy="74" r="7"/>'
              f'<path d="M{sx+29} 79l5 5"/></g>')
@@ -299,7 +299,7 @@ def mac(theme):
         b.append(T(wx + 52, y + 19, lab, 13, t["label"], 600 if on else 400, bg=rowbg))
     lx = wx + sw + 24
     b.append(T(lx, wy + 26, "すべての日記", 13, t["label"], 700, bg=t["win"]))
-    b.append(T(lx, wy + 43, "残り 23 件（無料版は 30 件まで）", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
+    b.append(T(lx, wy + 43, "残り 23件（無料版は 30件まで）", 11, t["sec"], 400, op=t["sec_op"], bg=t["win"]))
     # Toolbar: 編集, 今日を書く, then the search field at the trailing end (⌘F).
     sx = wx + ww - 196
     b.append(f'<rect x="{sx-40}" y="{wy+14}" width="28" height="28" rx="6" fill="{t["bar"]}"/>'
@@ -368,7 +368,7 @@ def iphone_empty(theme):
     b.append(f'<circle cx="{w-38}" cy="84" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
              f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(w - 50, 72, t["accent"]))
     b.append(T(20, 150, "日記", 34, t["label"], 700))
-    b.append(T(20, 180, "残り 30 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(20, 180, "残り 30件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     b.append(symbol("book", w / 2, 330, t["sec"]).replace('stroke-width="2"', 'stroke-width="3"')
              .replace(f'x="{w/2-9}"', f'x="{w/2-9}"'))
     b.append(T(w / 2, 390, "まだ日記がありません", 22, t["label"], 700, "middle"))
@@ -389,9 +389,9 @@ def iphone_ax5(theme):
     b.append(f'<circle cx="{w-38}" cy="84" r="22" fill="{t["glass"]}" fill-opacity="{t["glass_op"]}" '
              f'stroke="{t["glass_stroke"]}"/>' + symbol_pencil(w - 50, 72, t["accent"]))
     b.append(T(20, 176, "日記", 60, t["label"], 700))
-    b.append(T(20, 236, "残り 23 件", 49, t["sec"], 400, op=t["sec_op"]))
-    b.append(T(20, 296, "（無料版は30", 49, t["sec"], 400, op=t["sec_op"]))
-    b.append(T(20, 356, "件まで）", 49, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(20, 236, "残り 23件", 49, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(20, 296, "（無料版は", 49, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(20, 356, "30件まで）", 49, t["sec"], 400, op=t["sec_op"]))
     b.append(f'<rect x="16" y="380" width="{w-32}" height="520" rx="26" fill="{t["cell"]}"/>')
     b.append(chevron(w - 44, 520, t["label"]))
     lines = [("10月24日", 49, "sec"), ("（土）", 49, "sec"), ("公園の", 53, "label"),
@@ -423,7 +423,7 @@ def ipad_narrow(theme):
              + symbol_pencil(w - 108, 68, t["accent"]))
     b.append(search_btn(w - 44, 80, t, fill=t["cell"]))  # search folds into a button at the trailing end
     b.append(T(24, 150, "すべての日記", 34, t["label"], 700))
-    b.append(T(24, 180, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(24, 180, "残り 23件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     b.append(f'<rect x="20" y="204" width="{w-40}" height="{len(ENTRIES)*76}" rx="26" fill="{t["cell"]}"/>')
     for i, (d, s) in enumerate(ENTRIES):
         cy = 204 + i * 76
@@ -510,7 +510,7 @@ def duo_outer(theme):
     cw = w - 52  # content width left of the side column
     b = [duo_side_column(w, h, t)]
     b.append(T(20, 64, "日記", 34, t["label"], 700))
-    b.append(T(20, 94, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(20, 94, "残り 23件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     y = 116
     rows = ENTRIES
     b.append(f'<rect x="16" y="{y}" width="{cw-24}" height="{len(rows)*76}" rx="26" fill="{t["cell"]}"/>')
@@ -541,11 +541,11 @@ def duo_inner(theme):
     btn = lambda cx, cy: (f'<circle cx="{cx}" cy="{cy}" r="22" fill="{t["glass"]}" '
                           f'fill-opacity="{t["glass_op"]}" stroke="{t["glass_stroke"]}"/>')
     b.append(btn(w - 38, 80) + symbol_pencil(w - 50, 68, t["accent"]))
-    eb, ew = text_btn(w - 38 - 22 - 8 - 66, 58, "編集", t)
+    b.append(trash_btn(w - 38 - 22 - 8 - 22, 80, t))
+    eb, ew = text_btn(w - 38 - 22 - 8 - 44 - 8 - 66, 58, "編集", t)
     b.append(eb)
-    b.append(trash_btn(w - 38 - 22 - 8 - 66 - 8 - 22, 80, t))
     b.append(T(lx + 4, 148, "日記", 28, t["label"], 700))
-    b.append(T(lx + 4, 176, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"]))
+    b.append(T(lx + 4, 176, "残り 23件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"]))
     # Scrolling list: allowed to cross the fold.
     rows = ENTRIES
     ly = 196
@@ -609,7 +609,7 @@ def duo_inner_landscape(theme, folded=False):
     # List pane with its own controls at the top of the pane.
     b.append(f'<rect x="8" y="8" width="{lw+16}" height="{h-16}" rx="28" fill="{t["cell"]}"/>')
     b.append(T(24, 98, "日記", 28, t["label"], 700, bg=t["cell"]))
-    b.append(T(24, 126, "残り 23 件（無料版は 30 件まで）", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
+    b.append(T(24, 126, "残り 23件（無料版は 30件まで）", 15, t["sec"], 400, op=t["sec_op"], bg=t["cell"]))
     for i, (d, s) in enumerate(ENTRIES):
         cy = 146 + i * 76
         rowbg = mix(t["accent"], t["cell"], 0.14) if i == 0 else t["cell"]
