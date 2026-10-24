@@ -282,6 +282,14 @@ iOS / iPadOS 11pt、macOS 10pt、watchOS 12pt
 | グラフ | タイトルや要約で目的を先に伝える。色だけで系列を区別しない。棒グラフの縦軸は0から。各要素か要約にアクセシビリティのラベルを付ける | [70] |
 | 生成AI | AIを使っている場所を示す。結果の近くに編集・元に戻す・再試行を置く。生成中は何をしているかを具体的に書く。削除や購入を自動で実行しない | [71] |
 | ホーム画面のクイックアクション | 4つまで。SF Symbols を使い、タイトルにアプリ名を入れない | [72] |
+| ゲームの画面上の操作 | ホームインジケータ・Dynamic Island と重ねない。よく使うもの 44×44pt 以上、メニューなど 28×28pt 以上。補助の操作は上部。押された状態は指で隠れても見せる。A／X／R1 の表記を絵に使わない。移動は左、カメラは右 | [74] |
+| ゲームコントローラ・キーボード | 標準の操作（タッチ／キーボード・マウス）でも遊べるようにする。UIでは A＝実行、B＝戻る、ショルダー＝セクション移動、メニュー＝設定・一時停止、ホーム＝システム予約。表記は接続中のコントローラに合わせたシンボル。キーボードは1キーのコマンドを優先し、割り当てを変更できる。watchOS はコントローラ非対応 | [74] |
+| CarPlay（iOS のみ）| システムのテンプレートで iOS が描く（自由なレイアウトにしない）。ロック中でも動く。エラーは CarPlay の画面に出す。重要なものは画面の上半分。ライト／ダーク両対応。アイコン @2x 120×120px・@3x 180×180px、背景を黒にしない | [75] |
+| iPhoneのタッチ決済（iOS のみ）| ラベル「iPhoneのタッチ決済」／「タッチ決済」、記号は wave.3.right.circle(.fill)、Apple ロゴなし。最終金額は決済画面の前に決める。準備中・承認中は進捗表示。失敗時は別の方法か再試行 | [76] |
+| ID確認（iOS のみ）| ボタン「年齢を確認」／「本人であると確認」。通信方式の記号と Apple ロゴを入れない。必要なデータだけ求める | [77] |
+| ヘルスケアデータ・CareKit（iOS / iPadOS）| 使う時点で許可を求める。標準の許可画面をまねない。共有の管理はシステム設定。グラフは単位を軸に、凡例を付ける。薬は商品名 | [78] |
+| ResearchKit（iOS / iPadOS）| 概要 → 参加資格 → 同意 → データへのアクセス許可 の順。アンケートは1問1画面、問題数と所要時間を先に示す | [79] |
+| ShazamKit | 録音はできるだけ早く止める。iCloud のライブラリへの保存は先に許可を取る | [80] |
 
 ## 13. 画像の書き出し [73]
 - PNG はカラープロファイル（sRGB、広色域なら Display P3）を埋め込み、インターレースなしで書き出す（`scripts/export_png.py` は sRGB を埋め込む）
@@ -361,3 +369,10 @@ iOS / iPadOS 11pt、macOS 10pt、watchOS 12pt
 71. HIG — Generative AI: https://developer.apple.com/design/human-interface-guidelines/generative-ai
 72. HIG — Home Screen quick actions: https://developer.apple.com/design/human-interface-guidelines/home-screen-quick-actions
 73. HIG — Images: https://developer.apple.com/design/human-interface-guidelines/images
+74. HIG — Game controls: https://developer.apple.com/design/human-interface-guidelines/game-controls
+75. HIG — CarPlay: https://developer.apple.com/design/human-interface-guidelines/carplay
+76. HIG — Tap to Pay on iPhone: https://developer.apple.com/design/human-interface-guidelines/tap-to-pay-on-iphone
+77. HIG — ID Verifier: https://developer.apple.com/design/human-interface-guidelines/id-verifier
+78. HIG — CareKit: https://developer.apple.com/design/human-interface-guidelines/carekit
+79. HIG — ResearchKit: https://developer.apple.com/design/human-interface-guidelines/researchkit
+80. HIG — ShazamKit: https://developer.apple.com/design/human-interface-guidelines/shazamkit
